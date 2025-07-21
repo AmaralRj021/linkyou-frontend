@@ -58,7 +58,6 @@ function App() {
         return;
     }
 
-    // AQUI: Conexão com o servidor de sinalização no Render.com
     ws.current = new WebSocket('wss://linkyou-server.onrender.com'); // USANDO SUA URL DO RENDER.COM
 
     ws.current.onopen = () => {
@@ -156,7 +155,7 @@ function App() {
             }
           }
           break;
-        case 'call_ended':
+        case 'call_ended': // Quando o outro lado desconecta ou clica em "Próximo"
           setConnectionStatus('A chamada foi encerrada pelo outro usuário. Clique em "Próximo" para encontrar um novo.');
           if (peerConnection.current) {
             peerConnection.current.close();
@@ -195,13 +194,14 @@ function App() {
   }, [localStream]);
 
   const createPeerConnection = async (stream, shouldCreateOffer) => {
+    // Garante que a conexão anterior seja fechada e limpa
     if (peerConnection.current) {
         peerConnection.current.close();
     }
-    peerConnection.current = null;
+    peerConnection.current = null; // Zera a ref para garantir que uma nova seja criada
 
     if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null;
+        remoteVideoRef.current.srcObject = null; // Limpa o vídeo remoto
     }
 
     peerConnection.current = new RTCPeerConnection(STUN_SERVER);
@@ -287,21 +287,23 @@ function App() {
     }
   };
 
+  // Função para iniciar uma nova conexão (botão "Próximo")
   const startNewCall = async () => {
     setConnectionStatus('Buscando novo usuário...');
     if (peerConnection.current) {
-      peerConnection.current.close();
-      peerConnection.current = null;
+      peerConnection.current.close(); // Fecha a conexão WebRTC existente
+      peerConnection.current = null; // Limpa a referência
     }
     if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null;
+        remoteVideoRef.current.srcObject = null; // Limpa o vídeo remoto
     }
-    isInitiator.current = false;
-    iceCandidateQueue.current = [];
+    isInitiator.current = false; // Reseta a flag de iniciador
+    iceCandidateQueue.current = []; // Limpa a fila de candidatos ICE
 
+    // Envia o pedido de novo peer para o servidor
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
         ws.current.send(JSON.stringify({ type: 'request_new_peer' }));
-        setIsWaitingForCall(true);
+        setIsWaitingForCall(true); // Entra no estado de espera
     } else {
         console.error("WebSocket não está pronto para enviar 'request_new_peer'");
         setConnectionStatus('Erro: WebSocket não conectado. Tente recarregar a página.');

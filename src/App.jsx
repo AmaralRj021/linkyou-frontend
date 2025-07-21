@@ -124,7 +124,7 @@ function App() {
              isNegotiating.current = true;
              try {
                 await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.answer));
-                while (iceCandidateQueue.current.length > 0) {
+                while (iceCandidateQueue.current > 0) { // Corrigido para .current.length
                     const candidate = iceCandidateQueue.current.shift();
                     try {
                         await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -348,16 +348,37 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="main-content-wrapper"> {/* Novo wrapper para o conteúdo principal */}
-        <div className="video-and-controls"> {/* Contém vídeos e controles */}
-          <h1 className="app-title">LinkYou</h1> {/* Título do app */}
+      <div className="main-content-wrapper">
+        <div className="video-section-main"> {/* Novo container para o vídeo principal e seu mini-vídeo */}
+          <h1 className="app-title">LinkYou</h1>
           <p className="connection-status">Status: {connectionStatus}</p>
 
-          <div className="video-section-wrapper">
-            <div className="video-wrapper">
-                {/* <h2>Seu Vídeo</h2> Removido o H2 para um layout mais limpo */}
-                <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video>
-                <div className="media-controls local-controls"> {/* Adicionado classe para controle local */}
+          <div className="remote-video-container">
+            <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
+            <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video> {/* Seu vídeo dentro do container remoto */}
+            <div className="media-controls remote-controls-overlay"> {/* Controles overlay */}
+                <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    defaultValue="1"
+                    onChange={handleRemoteVolumeChange}
+                    title="Volume do Outro"
+                />
+                <button onClick={toggleFullScreen} title="Tela Cheia">
+                    [ ]
+                </button>
+                <button className="report-button" title="Denunciar Usuário">
+                    🚩
+                </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="sidebar-controls">
+            <div className="top-sidebar-controls"> {/* Agrupar controles de mídia locais e botão próximo */}
+                <div className="media-controls local-controls-sidebar">
                     <button onClick={toggleMic}>
                         {isMicMuted ? '🎤 Ligar' : '🔇 Mic'}
                     </button>
@@ -365,48 +386,20 @@ function App() {
                         {isCamOff ? '🎥 Ligar' : '📷 Cam'}
                     </button>
                 </div>
-            </div>
-            <div className="video-wrapper remote-video-wrapper"> {/* Adicionado classe para vídeo remoto */}
-                {/* <h2>Vídeo do Outro</h2> Removido o H2 para um layout mais limpo */}
-                <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
-                <div className="media-controls remote-controls"> {/* Adicionado classe para controle remoto */}
-                    <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        defaultValue="1"
-                        onChange={handleRemoteVolumeChange}
-                        title="Volume do Outro"
-                    />
-                    <button onClick={toggleFullScreen} title="Tela Cheia">
-                        [ ]
-                    </button>
-                    {/* Botão de Denúncia (placeholder por enquanto) */}
-                    <button className="report-button" title="Denunciar Usuário">
-                        🚩
-                    </button>
+                <div className="next-user-section">
+                    <button id="nextButton" onClick={startNewCall}>Próximo Usuário</button>
                 </div>
             </div>
-          </div>
-        </div>
-
-        <div className="sidebar-controls"> {/* Nova barra lateral para o botão "Próximo" e chat */}
-            <div className="next-user-section">
-                <button id="nextButton" onClick={startNewCall}>Próximo Usuário</button>
-            </div>
-            {/* Área para o Chat (será implementado na próxima etapa) */}
             <div className="chat-section">
                 <h3>Chat</h3>
                 <div className="chat-messages">
                     <p>Bem-vindo ao chat!</p>
-                    {/* Mensagens do chat aparecerão aqui */}
                 </div>
                 <input type="text" placeholder="Digite sua mensagem..." className="chat-input" />
                 <button className="send-button">Enviar</button>
             </div>
         </div>
-      </div> {/* Fim do main-content-wrapper */}
+      </div>
     </div>
   );
 }

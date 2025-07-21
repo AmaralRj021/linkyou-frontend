@@ -20,6 +20,9 @@ function App() {
 
   const iceCandidateQueue = useRef([]);
 
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isCamOff, setIsCamOff] = useState(false);
+
   // useEffect 1: Captura do Vídeo Local
   useEffect(() => {
     async function startLocalStream() {
@@ -58,7 +61,7 @@ function App() {
         return;
     }
 
-    ws.current = new WebSocket('wss://linkyou-server.onrender.com'); // USANDO SUA URL DO RENDER.COM
+    ws.current = new WebSocket('wss://linkyou-server.onrender.com');
 
     ws.current.onopen = () => {
       console.log('Conectado ao servidor de sinalização.');
@@ -155,7 +158,7 @@ function App() {
             }
           }
           break;
-        case 'call_ended': // Quando o outro lado desconecta ou clica em "Próximo"
+        case 'call_ended':
           setConnectionStatus('A chamada foi encerrada pelo outro usuário. Clique em "Próximo" para encontrar um novo.');
           if (peerConnection.current) {
             peerConnection.current.close();
@@ -194,14 +197,13 @@ function App() {
   }, [localStream]);
 
   const createPeerConnection = async (stream, shouldCreateOffer) => {
-    // Garante que a conexão anterior seja fechada e limpa
     if (peerConnection.current) {
         peerConnection.current.close();
     }
-    peerConnection.current = null; // Zera a ref para garantir que uma nova seja criada
+    peerConnection.current = null;
 
     if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null; // Limpa o vídeo remoto
+        remoteVideoRef.current.srcObject = null;
     }
 
     peerConnection.current = new RTCPeerConnection(STUN_SERVER);
@@ -287,26 +289,61 @@ function App() {
     }
   };
 
-  // Função para iniciar uma nova conexão (botão "Próximo")
   const startNewCall = async () => {
     setConnectionStatus('Buscando novo usuário...');
     if (peerConnection.current) {
-      peerConnection.current.close(); // Fecha a conexão WebRTC existente
-      peerConnection.current = null; // Limpa a referência
+      peerConnection.current.close();
+      peerConnection.current = null;
     }
     if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null; // Limpa o vídeo remoto
+        remoteVideoRef.current.srcObject = null;
     }
-    isInitiator.current = false; // Reseta a flag de iniciador
-    iceCandidateQueue.current = []; // Limpa a fila de candidatos ICE
+    isInitiator.current = false;
+    iceCandidateQueue.current = [];
 
-    // Envia o pedido de novo peer para o servidor
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
         ws.current.send(JSON.stringify({ type: 'request_new_peer' }));
-        setIsWaitingForCall(true); // Entra no estado de espera
+        setIsWaitingForCall(true);
     } else {
         console.error("WebSocket não está pronto para enviar 'request_new_peer'");
         setConnectionStatus('Erro: WebSocket não conectado. Tente recarregar a página.');
+    }
+  };
+
+  const toggleMic = () => {
+    if (localStream) {
+      localStream.getAudioTracks().forEach(track => {
+        track.enabled = !track.enabled;
+        setIsMicMuted(!track.enabled);
+      });
+    }
+  };
+
+  const toggleCam = () => {
+    if (localStream) {
+      localStream.getVideoTracks().forEach(track => {
+        track.enabled = !track.enabled;
+        setIsCamOff(!track.enabled);
+      });
+    }
+  };
+
+  const handleRemoteVolumeChange = (event) => {
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.volume = event.target.value;
+    }
+  };
+
+  // NOVO: Função para alternar tela cheia no vídeo remoto
+  const toggleFullScreen = () => {
+    if (remoteVideoRef.current) {
+      if (document.fullscreenElement) { // Se já estiver em tela cheia, sai
+        document.exitFullscreen();
+      } else { // Caso contrário, entra
+        remoteVideoRef.current.requestFullscreen().catch(err => {
+          console.error(`Erro ao tentar tela cheia: ${err.message}`);
+        });
+      }
     }
   };
 
@@ -314,16 +351,40 @@ function App() {
     <div className="app-container">
       <h1>LinkYou - Chat Randômico</h1>
       <p>Status: {connectionStatus}</p>
-      <div className="video-section">
+      {/* Container flexível para os vídeos */}
+      <div className="video-section-wrapper"> {/* NOVA DIV CONTAINER */}
         <div className="video-wrapper">
             <h2>Seu Vídeo</h2>
             <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video>
+            <div className="media-controls">
+                <button onClick={toggleMic}>
+                    {isMicMuted ? '🎤 Ligar Mic' : '🔇 Desligar Mic'}
+                </button>
+                <button onClick={toggleCam}>
+                    {isCamOff ? '🎥 Ligar Câmera' : '📷 Desligar Câmera'}
+                </button>
+            </div>
         </div>
         <div className="video-wrapper">
             <h2>Vídeo do Outro</h2>
             <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
+            <div className="media-controls">
+                Volume Remoto:
+                <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    defaultValue="1"
+                    onChange={handleRemoteVolumeChange}
+                />
+                {/* NOVO BOTÃO DE TELA CHEIA */}
+                <button onClick={toggleFullScreen}>
+                    T. Cheia
+                </button>
+            </div>
         </div>
-      </div>
+      </div> {/* Fim da NOVA DIV CONTAINER */}
       <div className="controls">
         <button id="nextButton" onClick={startNewCall}>Próximo Usuário</button>
       </div>

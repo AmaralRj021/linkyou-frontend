@@ -1,4 +1,19 @@
-/* src/App.css */
+/* src/App.css - Estilo inspirado no OmeTV */
+
+:root {
+  --bg-color: #1a1a1a; /* Fundo principal */
+  --container-bg: #282828; /* Fundo dos cards/contêineres */
+  --border-color: #444; /* Cor de borda suave */
+  --text-color: #e0e0e0; /* Texto geral */
+  --primary-color: #007bff; /* Azul primário (botões, destaques) */
+  --primary-hover: #0056b3; /* Azul ao passar o mouse */
+  --secondary-color: #6c757d; /* Cinza secundário */
+  --button-text-color: #ffffff; /* Cor do texto dos botões */
+  --video-bg: #000; /* Fundo para a área de vídeo sem imagem */
+  --chat-bg: #333; /* Fundo do chat */
+  --input-bg: #444; /* Fundo de inputs */
+  --input-text: #fff; /* Texto de inputs */
+}
 
 body {
   margin: 0;
@@ -7,148 +22,329 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #282c34; /* Fundo escuro */
-  color: #e0e0e0; /* Texto claro */
+  background-color: var(--bg-color);
+  color: var(--text-color);
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  padding: 20px;
+  padding: 10px; /* Reduz o padding geral para aproveitar mais espaço */
   box-sizing: border-box;
 }
 
 .app-container {
-  background-color: #3a3f47; /* Container mais claro que o fundo */
+  background-color: var(--container-bg);
   border-radius: 12px;
-  padding: 30px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
   width: 100%;
-  max-width: 800px; /* Largura máxima para desktops */
-  box-sizing: border-box;
+  max-width: 1200px; /* Aumenta a largura máxima para desktop */
+  min-height: calc(100vh - 20px); /* Ajusta para preencher a tela verticalmente */
+  display: flex; /* Transforma em flexbox para layout horizontal/vertical */
+  flex-direction: column; /* Padrão para mobile: conteúdo principal em coluna */
+  overflow: hidden; /* Garante que nada transborde */
 }
 
-h1 {
-  color: #61dafb; /* Cor de destaque para o título */
-  margin-bottom: 15px;
+.main-content-wrapper {
+  display: flex;
+  flex-direction: column; /* Mobile: vídeo e sidebar em coluna */
+  flex-grow: 1; /* Ocupa o espaço restante */
 }
 
-p {
-  color: #bbbbbb;
-  margin-bottom: 25px;
+.app-title {
+  color: var(--primary-color);
+  margin: 20px 0 10px;
+  font-size: 2em;
+  text-align: center;
 }
 
-/* Nova div para organizar os vídeos verticalmente */
+.connection-status {
+  color: var(--secondary-color);
+  margin-bottom: 20px;
+  font-size: 0.9em;
+  text-align: center;
+}
+
+.video-and-controls {
+  flex: 1; /* Ocupa o máximo de espaço possível */
+  display: flex;
+  flex-direction: column; /* Vídeos empilhados em mobile */
+  align-items: center;
+  padding: 15px;
+  gap: 15px; /* Espaço entre as seções de vídeo */
+}
+
 .video-section-wrapper {
   display: flex;
-  flex-direction: column; /* Coloca os itens em coluna */
-  gap: 20px; /* Espaço entre os vídeos */
-  margin-bottom: 25px;
+  flex-direction: column; /* Vídeos um embaixo do outro em mobile */
+  width: 100%;
+  max-width: 640px; /* Largura máxima para a coluna de vídeos */
+  gap: 15px;
 }
 
 .video-wrapper {
-  background-color: #20232a; /* Fundo para a área do vídeo */
+  background-color: var(--video-bg);
   border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  overflow: hidden; /* Garante que o vídeo não saia da borda */
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative; /* Para posicionar controles de mídia */
-}
-
-.video-wrapper h2 {
-  color: #9cdcfe; /* Cor para o título do vídeo */
-  margin-top: 0;
-  margin-bottom: 10px;
-  font-size: 1.1em;
-}
-
-video {
-  width: 100%;
-  max-width: 400px; /* Limita a largura do vídeo para um bom aspecto */
-  height: auto;
-  border-radius: 8px;
-  background-color: black; /* Fundo preto para quando a câmera estiver desligada */
-  object-fit: cover; /* Garante que o vídeo preencha o espaço sem distorcer */
-}
-
-.media-controls {
-  margin-top: 15px;
-  display: flex;
-  flex-wrap: wrap; /* Permite que os botões quebrem a linha em telas pequenas */
   justify-content: center;
-  gap: 10px;
+  width: 100%;
+  /* Proporção 16:9 para vídeos. Padding-top baseado em (9 / 16) * 100% = 56.25% */
+  padding-top: 56.25%; /* Isso cria um espaço para o vídeo em 16:9 */
 }
 
-.media-controls button,
-.controls button {
-  background-color: #61dafb;
-  color: #20232a;
+.video-wrapper video {
+  position: absolute; /* Posiciona o vídeo dentro do padding-top */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Garante que o vídeo preencha o espaço */
   border: none;
-  border-radius: 6px;
-  padding: 10px 15px;
-  font-size: 1em;
+}
+
+.video-wrapper h2 { /* Títulos dos vídeos ocultos por padrão, se não forem usados */
+  display: none;
+}
+
+/* Estilo para controles de mídia e volume */
+.media-controls {
+  position: absolute; /* Posiciona os controles */
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  background-color: rgba(0, 0, 0, 0.6); /* Fundo semi-transparente */
+  border-radius: 5px;
+  margin: 0 10px;
+}
+
+.media-controls button {
+  background-color: var(--primary-color);
+  color: var(--button-text-color);
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.9em;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  min-width: 120px; /* Largura mínima para botões */
+  transition: background-color 0.2s ease;
+  flex-shrink: 0; /* Impede que o botão encolha */
 }
 
-.media-controls button:hover,
-.controls button:hover {
-  background-color: #21a1f1;
-  transform: translateY(-2px);
+.media-controls button:hover {
+  background-color: var(--primary-hover);
 }
 
-.media-controls button:active,
-.controls button:active {
-  transform: translateY(0);
-}
-
-/* Estilo para o slider de volume */
 .media-controls input[type="range"] {
   -webkit-appearance: none;
-  width: 100px; /* Largura do slider */
-  height: 8px;
-  background: #555;
-  border-radius: 5px;
+  width: 80px; /* Largura do slider */
+  height: 6px;
+  background: var(--border-color);
+  border-radius: 3px;
   outline: none;
-  opacity: 0.7;
+  opacity: 0.8;
   transition: opacity .2s;
-  margin: 0 10px;
 }
 
 .media-controls input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  background: #61dafb;
+  background: var(--primary-color);
   cursor: pointer;
 }
 
-.media-controls input[type="range"]::-moz-range-thumb {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #61dafb;
+/* Sidebar para controles principais e chat */
+.sidebar-controls {
+  background-color: var(--container-bg);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px; /* Espaço ao redor em mobile */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.next-user-section {
+  text-align: center;
+}
+
+.next-user-section button {
+  background-color: var(--primary-color);
+  color: var(--button-text-color);
+  border: none;
+  border-radius: 6px;
+  padding: 12px 25px;
+  font-size: 1.1em;
   cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  width: 100%; /* Ocupa a largura total da sidebar */
 }
 
-.controls {
-  margin-top: 25px;
+.next-user-section button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
 }
 
-/* Responsividade básica para telas maiores (desktop) */
-@media (min-width: 768px) {
+/* Estilos para o Chat (futuramente mais detalhados) */
+.chat-section {
+  background-color: var(--chat-bg);
+  border-radius: 8px;
+  padding: 15px;
+  height: 200px; /* Altura fixa para o chat em mobile */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Esconde overflow */
+}
+
+.chat-section h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.chat-messages {
+  flex-grow: 1;
+  overflow-y: auto; /* Scroll para mensagens */
+  padding-right: 5px; /* Espaço para a scrollbar */
+  margin-bottom: 10px;
+  font-size: 0.9em;
+  color: var(--text-color);
+}
+
+.chat-messages p {
+  margin: 5px 0;
+  word-wrap: break-word; /* Quebra palavras longas */
+}
+
+.chat-input {
+  width: calc(100% - 10px); /* Ajusta largura */
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  margin-bottom: 10px;
+}
+
+.send-button {
+  background-color: var(--primary-color);
+  color: var(--button-text-color);
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  width: 100%;
+}
+
+.send-button:hover {
+  background-color: var(--primary-hover);
+}
+
+
+/* RESPONSIVIDADE PARA DESKTOP (Layout estilo OmeTV) */
+@media (min-width: 1024px) { /* A partir de 1024px, muda para layout horizontal */
+  .app-container {
+    flex-direction: row; /* Coloca o conteúdo principal lado a lado */
+    min-height: calc(100vh - 20px);
+    padding: 0; /* Remove padding do container para full width */
+  }
+
+  .main-content-wrapper {
+    flex-direction: row; /* Vídeo e sidebar lado a lado */
+    flex-grow: 1;
+  }
+
+  .video-and-controls {
+    flex: 3; /* Vídeos ocupam 3 partes do espaço */
+    padding: 20px; /* Adiciona padding para o conteúdo de vídeo */
+  }
+
   .video-section-wrapper {
-    flex-direction: row; /* Volta para linha em telas maiores */
-    justify-content: space-around; /* Espaça os vídeos horizontalmente */
+    flex-direction: column; /* Vídeos ainda em coluna aqui */
+    gap: 10px; /* Menos espaço entre os vídeos */
+    max-width: 100%; /* Ocupa a largura total da seção */
   }
 
   .video-wrapper {
-    flex: 1; /* Permite que os vídeos ocupem espaço igualmente */
-    max-width: 48%; /* Limita a largura para caber dois na linha */
+    flex: 1; /* Para ocupar o espaço verticalmente */
+    height: auto; /* Deixa a altura se ajustar automaticamente */
+    padding-top: 0; /* Remove padding-top se quiser altura fixa, ou use para proporção */
+    max-width: 100%;
   }
+
+  .video-wrapper.remote-video-wrapper {
+    /* Estilo para o vídeo remoto ser maior, como no OmeTV */
+    flex: 2; /* Vídeo remoto ocupa mais espaço */
+    min-height: 400px; /* Altura mínima para o vídeo remoto em desktop */
+  }
+
+  .video-wrapper video {
+    position: static; /* Volta para posicionamento estático */
+    height: 100%; /* Preenche a altura disponível */
+  }
+
+  .sidebar-controls {
+    flex: 1; /* Sidebar ocupa 1 parte do espaço */
+    max-width: 300px; /* Largura máxima para a sidebar */
+    margin: 0; /* Remove margens extras */
+    border-radius: 0 12px 12px 0; /* Cantos arredondados apenas de um lado */
+    border-left: 1px solid var(--border-color); /* Borda para separar do vídeo */
+  }
+
+  .chat-section {
+    flex-grow: 1; /* Ocupa o restante do espaço vertical na sidebar */
+    height: auto; /* Altura automática */
+    min-height: 250px; /* Altura mínima para o chat */
+  }
+
+  /* Posicionamento do seu vídeo menor no canto superior direito do vídeo remoto */
+  .video-wrapper #localVideo {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 160px; /* Tamanho fixo para o seu vídeo */
+    height: 90px; /* Proporção 16:9 */
+    z-index: 10; /* Garante que ele fique por cima */
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+  }
+
+  .video-wrapper .local-controls {
+    bottom: auto; /* Remove o bottom */
+    top: 115px; /* Posição abaixo do vídeo local */
+    right: 15px;
+    left: auto; /* Alinha à direita */
+    flex-direction: column; /* Controles locais um embaixo do outro */
+    gap: 5px;
+    padding: 5px;
+    background-color: transparent; /* Fundo transparente */
+    box-shadow: none; /* Sem sombra */
+  }
+  .local-controls button {
+    padding: 5px 8px; /* Reduz padding */
+    font-size: 0.8em;
+    min-width: unset; /* Remove largura mínima */
+  }
+}
+
+/* Ajustes para botões de controle de mídia serem menores em mobile também */
+@media (max-width: 767px) {
+    .media-controls button {
+        padding: 6px 10px;
+        font-size: 0.8em;
+        min-width: unset;
+    }
 }

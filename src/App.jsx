@@ -334,12 +334,11 @@ function App() {
     }
   };
 
-  // NOVO: Função para alternar tela cheia no vídeo remoto
   const toggleFullScreen = () => {
     if (remoteVideoRef.current) {
-      if (document.fullscreenElement) { // Se já estiver em tela cheia, sai
+      if (document.fullscreenElement) {
         document.exitFullscreen();
-      } else { // Caso contrário, entra
+      } else {
         remoteVideoRef.current.requestFullscreen().catch(err => {
           console.error(`Erro ao tentar tela cheia: ${err.message}`);
         });
@@ -349,45 +348,65 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1>LinkYou - Chat Randômico</h1>
-      <p>Status: {connectionStatus}</p>
-      {/* Container flexível para os vídeos */}
-      <div className="video-section-wrapper"> {/* NOVA DIV CONTAINER */}
-        <div className="video-wrapper">
-            <h2>Seu Vídeo</h2>
-            <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video>
-            <div className="media-controls">
-                <button onClick={toggleMic}>
-                    {isMicMuted ? '🎤 Ligar Mic' : '🔇 Desligar Mic'}
-                </button>
-                <button onClick={toggleCam}>
-                    {isCamOff ? '🎥 Ligar Câmera' : '📷 Desligar Câmera'}
-                </button>
+      <div className="main-content-wrapper"> {/* Novo wrapper para o conteúdo principal */}
+        <div className="video-and-controls"> {/* Contém vídeos e controles */}
+          <h1 className="app-title">LinkYou</h1> {/* Título do app */}
+          <p className="connection-status">Status: {connectionStatus}</p>
+
+          <div className="video-section-wrapper">
+            <div className="video-wrapper">
+                {/* <h2>Seu Vídeo</h2> Removido o H2 para um layout mais limpo */}
+                <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video>
+                <div className="media-controls local-controls"> {/* Adicionado classe para controle local */}
+                    <button onClick={toggleMic}>
+                        {isMicMuted ? '🎤 Ligar' : '🔇 Mic'}
+                    </button>
+                    <button onClick={toggleCam}>
+                        {isCamOff ? '🎥 Ligar' : '📷 Cam'}
+                    </button>
+                </div>
+            </div>
+            <div className="video-wrapper remote-video-wrapper"> {/* Adicionado classe para vídeo remoto */}
+                {/* <h2>Vídeo do Outro</h2> Removido o H2 para um layout mais limpo */}
+                <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
+                <div className="media-controls remote-controls"> {/* Adicionado classe para controle remoto */}
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        defaultValue="1"
+                        onChange={handleRemoteVolumeChange}
+                        title="Volume do Outro"
+                    />
+                    <button onClick={toggleFullScreen} title="Tela Cheia">
+                        [ ]
+                    </button>
+                    {/* Botão de Denúncia (placeholder por enquanto) */}
+                    <button className="report-button" title="Denunciar Usuário">
+                        🚩
+                    </button>
+                </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="sidebar-controls"> {/* Nova barra lateral para o botão "Próximo" e chat */}
+            <div className="next-user-section">
+                <button id="nextButton" onClick={startNewCall}>Próximo Usuário</button>
+            </div>
+            {/* Área para o Chat (será implementado na próxima etapa) */}
+            <div className="chat-section">
+                <h3>Chat</h3>
+                <div className="chat-messages">
+                    <p>Bem-vindo ao chat!</p>
+                    {/* Mensagens do chat aparecerão aqui */}
+                </div>
+                <input type="text" placeholder="Digite sua mensagem..." className="chat-input" />
+                <button className="send-button">Enviar</button>
             </div>
         </div>
-        <div className="video-wrapper">
-            <h2>Vídeo do Outro</h2>
-            <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
-            <div className="media-controls">
-                Volume Remoto:
-                <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    defaultValue="1"
-                    onChange={handleRemoteVolumeChange}
-                />
-                {/* NOVO BOTÃO DE TELA CHEIA */}
-                <button onClick={toggleFullScreen}>
-                    T. Cheia
-                </button>
-            </div>
-        </div>
-      </div> {/* Fim da NOVA DIV CONTAINER */}
-      <div className="controls">
-        <button id="nextButton" onClick={startNewCall}>Próximo Usuário</button>
-      </div>
+      </div> {/* Fim do main-content-wrapper */}
     </div>
   );
 }

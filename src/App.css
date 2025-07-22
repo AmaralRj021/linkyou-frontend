@@ -1,20 +1,23 @@
-/* src/App.css - Layout Refinado e Estilo Cibernético Elegante */
+/* src/App.css - Estilo Inspirado no Chatruletka */
 
 :root {
-  /* Paleta Cibernético Elegante */
-  --bg-color: #0e0e10; /* Fundo principal (quase preto) */
-  --container-bg: #1a1a1a; /* Fundo dos contêineres/cards */
-  --border-color: #333; /* Borda suave */
-  --text-color: #ffffff; /* Texto geral */
-  --primary-color: #4bc0c8; /* Azul-ciano vibrante (destaque) */
-  --primary-hover: #379da5; /* Azul-ciano ao passar o mouse */
-  --secondary-color: #7a3cf9; /* Roxo neon (secundário) */
-  --attention-color: #ff4060; /* Vermelho para alertas/ações de encerrar */
-  --button-text-color: #ffffff; /* Texto dos botões */
+  /* Paleta Inspirada no Chatruletka (com tons da sua "Cibernético Elegante") */
+  --bg-color: #121212; /* Fundo principal escuro */
+  --sidebar-bg: #1e1e1e; /* Fundo da barra lateral */
   --video-bg: #000; /* Fundo para a área de vídeo sem imagem */
-  --chat-bg: #222; /* Fundo do chat */
-  --input-bg: #333; /* Fundo de inputs */
-  --input-text: #fff; /* Texto de inputs */
+  --button-primary: #007bff; /* Azul vibrante para Iniciar */
+  --button-primary-hover: #0056b3;
+  --button-danger: #dc3545; /* Vermelho para Parar */
+  --button-danger-hover: #bd2130;
+  --button-secondary: #343a40; /* Botões secundários */
+  --button-secondary-hover: #23272b;
+  --text-color-light: #f8f9fa; /* Texto claro */
+  --text-color-muted: #adb5bd; /* Texto secundário/status */
+  --border-color: #333; /* Borda suave */
+  --input-bg: #2b2b2b; /* Fundo de inputs */
+  --input-text: #f8f9fa; /* Texto de inputs */
+  --highlight-color: #4bc0c8; /* Cor de destaque (do seu ciano) */
+  --shadow-color: rgba(0, 0, 0, 0.7);
 }
 
 body {
@@ -25,7 +28,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--bg-color);
-  color: var(--text-color);
+  color: var(--text-color-light);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -35,144 +38,87 @@ body {
 }
 
 .app-container {
-  background-color: var(--container-bg);
-  border-radius: 0; /* Remover border-radius para ocupar toda a largura/altura */
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8); /* Sombra mais intensa */
-  width: 100vw; /* Ocupa a largura total da viewport */
-  min-height: 100vh; /* Ocupa a altura total da viewport */
+  background-color: var(--bg-color); /* Ocupa toda a tela */
+  width: 100vw;
+  min-height: 100vh;
   display: flex;
-  flex-direction: column; /* Padrão para mobile */
+  flex-direction: column; /* Mobile: empilhado */
   overflow: hidden;
 }
 
-.main-content-wrapper {
+.main-layout-wrapper {
   display: flex;
-  flex-direction: column; /* Mobile: vídeo e sidebar em coluna */
+  flex-direction: column; /* Mobile: sidebar e vídeo empilhados */
   flex-grow: 1;
 }
 
-.app-title {
-  color: var(--primary-color);
-  margin: 20px 0 10px;
-  font-size: 2.5em; /* Aumenta o tamanho do título */
-  text-align: center;
-  font-weight: bold;
-  text-shadow: 0 0 8px rgba(75, 192, 200, 0.5); /* Efeito neon sutil */
-}
-
-.connection-status {
-  color: var(--secondary-color);
-  margin-bottom: 20px;
-  font-size: 1em;
-  text-align: center;
-}
-
-/* Área principal para o vídeo do outro usuário e seu mini-vídeo */
-.video-section-main {
-  flex: 1;
+/* BARRA LATERAL ESQUERDA */
+.sidebar-left {
+  background-color: var(--sidebar-bg);
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center; /* Centraliza verticalmente o conteúdo */
-  padding: 15px;
-  position: relative; /* Para posicionar o título LinkYou no canto */
+  gap: 20px;
+  box-shadow: 2px 0 10px var(--shadow-color); /* Sombra para o lado */
+  min-width: 280px; /* Largura mínima da sidebar */
+  max-width: 320px; /* Largura máxima da sidebar em desktop */
+  flex-shrink: 0; /* Não permite que a sidebar encolha */
 }
 
-/* Posicionamento do título LinkYou no canto superior esquerdo */
+.app-logo-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.app-logo {
+    width: 80px; /* Tamanho do seu logo */
+    height: 80px;
+    margin-bottom: 10px;
+}
 .app-title {
-  position: absolute;
-  top: 15px;
-  left: 15px;
+  color: var(--highlight-color); /* Usando sua cor de destaque */
+  font-size: 2.2em;
   margin: 0;
-  font-size: 1.8em; /* Ajuste para caber no canto */
-  z-index: 20; /* Acima de tudo */
+  font-weight: bold;
   text-shadow: 0 0 5px rgba(75, 192, 200, 0.7);
 }
-
-.connection-status {
-  position: absolute;
-  top: 60px; /* Abaixo do título */
-  left: 15px;
-  margin: 0;
-  font-size: 0.8em;
-  z-index: 20;
+.users-online {
+  color: #28a745; /* Verde para "online" */
+  font-size: 0.9em;
+  margin-top: 5px;
 }
 
-
-.remote-video-container {
-  background-color: var(--video-bg);
-  border-radius: 1rem; /* Borda arredondada */
-  box-shadow: 0 0 20px rgba(0,0,0,0.4); /* Sombra suave */
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-  max-width: 900px; /* Largura máxima para o vídeo remoto */
-  /* Proporção 16:9: (9 / 16) * 100% = 56.25% */
-  padding-top: 56.25%; /* Isso cria o espaço para o vídeo em 16:9 */
-  margin-bottom: 15px; /* Espaço entre o vídeo e a sidebar em mobile */
-}
-
-#remoteVideo {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border: none;
-  border-radius: 1rem; /* Borda arredondada para o vídeo */
-}
-
-/* Seu vídeo em miniatura */
-#localVideo {
-  position: absolute;
-  bottom: 15px; /* Canto inferior direito do vídeo remoto */
-  right: 15px;
-  width: 200px; /* Tamanho fixo */
-  height: 112.5px; /* Proporção 16:9 (200 * 9 / 16) */
-  z-index: 10;
-  border: 2px solid var(--primary-color); /* Borda ciano */
-  box-shadow: 0 0 10px rgba(75, 192, 200, 0.7); /* Sombra neon */
-  border-radius: 0.8rem; /* Borda mais arredondada */
-  background-color: var(--video-bg); /* Garante fundo preto se a câmera estiver desligada */
-  object-fit: cover;
-}
-
-/* Controles sobre o vídeo remoto */
-.remote-controls-overlay {
-  position: absolute;
-  bottom: 15px;
-  left: 50%;
-  transform: translateX(-50%); /* Centraliza horizontalmente */
+.download-buttons {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
   gap: 10px;
-  padding: 8px 15px;
-  background-color: rgba(0, 0, 0, 0.7); /* Fundo mais escuro */
-  border-radius: 8px;
-  z-index: 15; /* Acima do vídeo e seu mini-vídeo */
+  margin-bottom: 20px;
 }
-
-.remote-controls-overlay button {
-  background-color: var(--primary-color);
+.download-btn {
+  background-color: var(--button-secondary);
   color: var(--button-text-color);
-  border: none;
-  border-radius: 4px;
-  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
   font-size: 0.9em;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease;
+  white-space: nowrap; /* Impede quebra de linha em mobile */
+}
+.download-btn:hover {
+  background-color: var(--button-secondary-hover);
 }
 
-.remote-controls-overlay button:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-2px);
+.local-volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-color-muted);
+  font-size: 0.9em;
+  margin-bottom: 20px;
 }
-
-.remote-controls-overlay input[type="range"] {
+.local-volume-control input[type="range"] {
+  flex-grow: 1; /* Ocupa o espaço restante */
   -webkit-appearance: none;
-  width: 80px;
   height: 6px;
   background: var(--border-color);
   border-radius: 3px;
@@ -180,249 +126,325 @@ body {
   opacity: 0.8;
   transition: opacity .2s;
 }
-
-.remote-controls-overlay input[type="range"]::-webkit-slider-thumb {
+.local-volume-control input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--primary-color);
+  background: var(--highlight-color);
   cursor: pointer;
 }
 
-.remote-controls-overlay .report-button {
-  background-color: var(--attention-color); /* Cor de atenção para denúncia */
-}
-.remote-controls-overlay .report-button:hover {
-  background-color: darken(var(--attention-color), 10%); /* Escurece no hover */
-}
-
-
-/* Sidebar para controles principais e chat */
-.sidebar-controls {
-  background-color: var(--container-bg);
-  padding: 20px;
-  border-radius: 12px; /* Mantém a borda arredondada na sidebar em mobile */
-  margin: 15px; /* Margem em volta da sidebar em mobile */
+.main-action-buttons {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+  gap: 15px;
+  margin-bottom: 20px;
 }
-
-.top-sidebar-controls {
-    display: flex;
-    flex-direction: column; /* Botões um embaixo do outro em mobile */
-    gap: 15px;
-    align-items: center;
-}
-
-.media-controls.local-controls-sidebar {
-    position: static; /* Volta a ser estático */
-    background-color: transparent; /* Remove fundo */
-    box-shadow: none; /* Remove sombra */
-    margin: 0;
-    gap: 10px;
-    width: 100%;
-    justify-content: center;
-}
-.local-controls-sidebar button {
-    padding: 10px 18px; /* Aumenta um pouco o padding */
-    font-size: 1em;
-    min-width: unset;
-}
-
-.next-user-section {
-  text-align: center;
-  width: 100%; /* Ocupa a largura total na sidebar */
-}
-
-.next-user-section button {
-  background-color: var(--secondary-color); /* Cor roxa para o botão próximo */
-  color: var(--button-text-color);
+#startButton, #stopButton {
   border: none;
-  border-radius: 6px;
-  padding: 15px 30px; /* Botão maior */
+  border-radius: 8px;
+  padding: 15px;
   font-size: 1.2em;
+  font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease;
-  width: 100%;
-  text-shadow: 0 0 5px rgba(122, 60, 249, 0.5); /* Sombra neon sutil */
+  color: var(--button-text-color);
+}
+#startButton {
+  background-color: var(--button-primary); /* Azul para Iniciar */
+}
+#startButton:hover {
+  background-color: var(--button-primary-hover);
+  transform: translateY(-2px);
+}
+#stopButton {
+  background-color: var(--button-danger); /* Vermelho para Parar */
+}
+#stopButton:hover {
+  background-color: var(--button-danger-hover);
+  transform: translateY(-2px);
 }
 
-.next-user-section button:hover {
-  background-color: darken(var(--secondary-color), 10%); /* Escurece no hover */
-  transform: translateY(-3px); /* Animação mais perceptível */
+.filter-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.filter-button {
+  background-color: var(--button-secondary);
+  color: var(--text-color-light);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.filter-button:hover {
+  background-color: var(--button-secondary-hover);
 }
 
-/* Chat Section */
+.rules-section {
+  background-color: var(--input-bg); /* Fundo para a seção de regras */
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+.rules-text {
+  font-size: 0.85em;
+  color: var(--text-color-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+.rules-text a {
+  color: var(--highlight-color);
+  text-decoration: none;
+}
+.rules-text a:hover {
+  text-decoration: underline;
+}
+
+/* CHAT SECTION */
 .chat-section {
   background-color: var(--chat-bg);
   border-radius: 8px;
   padding: 15px;
-  flex-grow: 1; /* Ocupa o máximo de espaço vertical */
+  flex-grow: 1; /* Ocupa o espaço restante na sidebar */
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: inset 0 0 8px rgba(0,0,0,0.3); /* Sombra interna sutil */
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
 }
-
 .chat-section h3 {
-  color: var(--primary-color);
+  color: var(--text-color-muted); /* Cor para o título do chat */
+  font-size: 0.9em;
+  font-weight: normal;
   margin-top: 0;
   margin-bottom: 10px;
-  text-align: center;
-  text-shadow: 0 0 3px rgba(75, 192, 200, 0.5);
+  text-align: left;
 }
-
 .chat-messages {
   flex-grow: 1;
   overflow-y: auto;
   padding-right: 5px;
   margin-bottom: 10px;
   font-size: 0.95em;
-  color: var(--text-color);
+  color: var(--text-color-light);
+  line-height: 1.4;
 }
-
 .chat-messages p {
   margin: 5px 0;
   word-wrap: break-word;
 }
-
 .chat-input {
-  width: calc(100% - 20px); /* Ajusta largura com padding */
-  padding: 12px;
+  width: calc(100% - 22px); /* Ajusta largura */
+  padding: 10px;
   border: 1px solid var(--border-color);
   border-radius: 5px;
   background-color: var(--input-bg);
   color: var(--input-text);
-  font-size: 1em;
+  font-size: 0.9em;
   margin-bottom: 10px;
-  box-sizing: border-box; /* Inclui padding na largura */
+  box-sizing: border-box;
 }
-
 .send-button {
-  background-color: var(--primary-color);
+  background-color: var(--highlight-color); /* Ciano para Enviar */
   color: var(--button-text-color);
   border: none;
   border-radius: 5px;
-  padding: 12px 15px;
-  font-size: 1em;
+  padding: 10px 15px;
+  font-size: 0.9em;
   cursor: pointer;
   transition: background-color 0.2s ease;
   width: 100%;
 }
-
 .send-button:hover {
-  background-color: var(--primary-hover);
+  background-color: var(--primary-hover); /* Escurece no hover */
 }
 
 
-/* RESPONSIVIDADE PARA DESKTOP (Layout final) */
-@media (min-width: 1024px) {
-  body {
-    padding: 20px; /* Adiciona padding ao redor do app-container em desktop */
-  }
-  .app-container {
-    border-radius: 12px; /* Volta o border-radius para o container principal em desktop */
-    width: 90vw; /* Ocupa 90% da largura da viewport */
-    max-width: 1400px; /* Aumenta a largura máxima */
-    height: 90vh; /* Ocupa 90% da altura da viewport */
-    min-height: 600px; /* Altura mínima para desktop */
-    flex-direction: row; /* Layout horizontal */
-  }
+/* ÁREA PRINCIPAL DO VÍDEO (DIREITA) */
+.video-main-area {
+  flex-grow: 1; /* Ocupa o restante do espaço horizontal */
+  position: relative;
+  background-color: var(--video-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px; /* Padding para o vídeo em mobile */
+}
 
-  .main-content-wrapper {
-    flex-direction: row; /* Continua sendo linha */
-    flex-grow: 1;
-    padding: 0; /* Remove padding, pois o app-container já tem */
-  }
+.connection-status {
+  position: absolute;
+  top: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 0.85em;
+  color: var(--text-color-light);
+  white-space: nowrap; /* Não quebra linha */
+}
 
-  .video-section-main {
-    flex: 3; /* Vídeos ocupam 3 partes do espaço */
-    padding: 20px; /* Padding interno */
+.remote-video-display-container {
+  width: 100%;
+  height: 100%; /* Ocupa 100% da área do vídeo principal */
+  position: relative;
+  background-color: var(--video-bg); /* Fundo para caso não haja vídeo */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px; /* Bordas arredondadas para o container do vídeo */
+  overflow: hidden;
+}
+
+#remoteVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Ajusta o vídeo para caber, mostrando barras pretas se necessário */
+  border-radius: 8px; /* Bordas arredondadas para o vídeo em si */
+  background-color: var(--video-bg);
+}
+
+/* Seu vídeo menor no canto inferior direito do vídeo principal */
+#localVideo {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  width: 200px; /* Largura fixa */
+  height: 112.5px; /* Proporção 16:9 */
+  z-index: 10;
+  border: 2px solid var(--highlight-color); /* Borda ciano */
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(75, 192, 200, 0.7);
+  background-color: var(--video-bg); /* Fundo preto para quando a câmera estiver desligada */
+  object-fit: cover; /* Garante que seu vídeo preencha o espaço */
+}
+
+/* Controles de Mídia Flutuantes sobre o vídeo principal */
+.media-controls-overlay {
+  position: absolute;
+  top: 15px; /* Posição no topo do vídeo principal */
+  right: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 15px;
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 8px;
+  z-index: 15;
+}
+
+.media-control-button { /* Estilo geral para botões de controle de mídia */
+    background-color: var(--button-secondary);
+    color: var(--button-text-color);
+    border: none;
+    border-radius: 50%; /* Botões redondos */
+    width: 40px;
+    height: 40px;
+    font-size: 1.2em; /* Tamanho do ícone */
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+.media-control-button:hover {
+    background-color: var(--button-secondary-hover);
+    transform: scale(1.1);
+}
+.media-control-button.report-button {
+    background-color: var(--attention-color); /* Vermelho para denúncia */
+}
+.media-control-button.report-button:hover {
+    background-color: darken(var(--attention-color), 10%);
+}
+
+.volume-slider {
+    -webkit-appearance: none;
+    width: 80px;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 3px;
+    outline: none;
+    opacity: 0.8;
+    transition: opacity .2s;
+}
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--highlight-color);
+    cursor: pointer;
+}
+
+
+/* RESPONSIVIDADE PARA DESKTOP */
+@media (min-width: 768px) {
+  .app-container {
+    border-radius: 12px; /* Borda arredondada no container principal em desktop */
+    width: 95vw; /* Ocupa 95% da largura da viewport */
+    max-width: 1300px; /* Largura máxima */
+    height: 90vh; /* Ocupa 90% da altura */
+    min-height: 600px; /* Altura mínima */
+    flex-direction: row; /* Desktop: sidebar e vídeo lado a lado */
   }
 
-  .remote-video-container {
-    width: 100%;
-    max-width: 100%; /* Ocupa toda a largura da coluna de vídeo */
-    height: 100%; /* Ocupa toda a altura da coluna de vídeo */
-    padding-top: 0; /* Remove padding-top */
+  .main-layout-wrapper {
+    flex-direction: row;
   }
 
-  #remoteVideo {
-    object-fit: contain; /* Ajusta o vídeo para caber dentro do container, mostrando as barras pretas se necessário */
-    border-radius: 1rem;
+  .sidebar-left {
+    min-width: 280px;
+    max-width: 320px;
+    height: 100%; /* Ocupa toda a altura */
+    border-radius: 12px 0 0 12px; /* Apenas canto superior esquerdo e inferior esquerdo arredondados */
   }
 
-  #localVideo {
-    width: 240px; /* Tamanho fixo para seu vídeo */
-    height: 135px; /* Proporção 16:9 */
-    border-radius: 0.8rem;
-  }
-
-  /* Ajusta a posição dos controles overlay do vídeo remoto */
-  .remote-controls-overlay {
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .sidebar-controls {
-    flex: 1; /* Sidebar ocupa 1 parte do espaço */
-    max-width: 350px;
-    min-width: 280px; /* Largura mínima para a sidebar */
-    margin: 0;
-    border-radius: 0 12px 12px 0; /* Borda direita arredondada */
-    border-left: 1px solid var(--border-color);
-    padding: 20px;
-    display: flex; /* Garante que chat e botões fiquem bem organizados */
-    flex-direction: column;
-  }
-
-  .top-sidebar-controls {
-      flex-direction: row; /* Controles locais e botão próximo lado a lado no topo da sidebar */
-      flex-wrap: wrap; /* Permite quebrar linha se não couber */
-      justify-content: center;
-      gap: 10px; /* Espaçamento entre itens */
-      margin-bottom: 20px; /* Espaço antes do chat */
-  }
-
-  .media-controls.local-controls-sidebar {
-      position: static;
-      background-color: var(--input-bg); /* Fundo para os controles locais */
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      border-radius: 8px;
-      padding: 10px;
-      gap: 8px;
-      justify-content: center;
-  }
-  .local-controls-sidebar button {
-      padding: 8px 15px;
-      font-size: 0.9em;
-  }
-
-  .next-user-section {
-      margin-top: 10px; /* Ajusta margem superior */
-  }
-  .next-user-section button {
-      padding: 12px 20px; /* Ajusta padding */
-      font-size: 1em; /* Ajusta tamanho da fonte */
-  }
-
-  .chat-section {
+  .video-main-area {
     flex-grow: 1;
-    height: auto;
-    min-height: 250px; /* Altura mínima para o chat */
-    border-radius: 8px;
+    border-radius: 0 12px 12px 0; /* Apenas canto superior direito e inferior direito arredondados */
+    padding: 20px; /* Mais padding em desktop */
   }
 
-  .chat-input, .send-button {
-      flex-shrink: 0;
+  /* Ajustes para elementos que eram "absolute" em mobile e agora se movem */
+  .app-title, .connection-status {
+    position: static; /* Volta para posicionamento normal */
+    transform: none;
+    text-align: center;
+    margin: 0; /* Remove margens extras */
+  }
+  .app-title { margin-bottom: 10px; } /* Ajusta espaçamento pós static */
+  .connection-status { margin-bottom: 20px; }
+
+
+  .remote-video-display-container {
+    height: calc(100% - 70px); /* Ajusta altura para considerar título e status */
+    width: auto; /* Deixa a largura se ajustar à proporção */
+    max-width: 100%; /* Garante que não ultrapasse */
+  }
+
+  /* Seu vídeo pequeno no canto */
+  #localVideo {
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 112.5px;
+  }
+
+  /* Controles de mídia sobre o vídeo principal */
+  .media-controls-overlay {
+    top: 20px; /* Mais espaço do topo */
+    right: 20px;
+    transform: none; /* Remove a centralização */
+    left: auto;
   }
 }

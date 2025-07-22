@@ -1,6 +1,8 @@
 // src/App.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
+// Importe ícones se for usá-los, por exemplo:
+// import { Mic, MicOff, Video, VideoOff, Fullscreen, X } from 'lucide-react'; // Exemplo de importação de biblioteca de ícones
 
 const STUN_SERVER = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -23,6 +25,9 @@ function App() {
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isCamOff, setIsCamOff] = useState(false);
 
+  // NOVO: estado para o volume do vídeo local (para o slider)
+  const [localVolume, setLocalVolume] = useState(1); // 0 a 1
+
   // useEffect 1: Captura do Vídeo Local
   useEffect(() => {
     async function startLocalStream() {
@@ -31,6 +36,7 @@ function App() {
         setLocalStream(stream);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
+          localVideoRef.current.volume = localVolume; // Define o volume inicial
         }
         setConnectionStatus('Câmera e microfone prontos. Conectando ao servidor...');
       } catch (error) {
@@ -124,7 +130,7 @@ function App() {
              isNegotiating.current = true;
              try {
                 await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.answer));
-                while (iceCandidateQueue.current > 0) { // Corrigido para .current.length
+                while (iceCandidateQueue.current.length > 0) {
                     const candidate = iceCandidateQueue.current.shift();
                     try {
                         await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -328,6 +334,15 @@ function App() {
     }
   };
 
+  // NOVO: Função para controlar o volume do seu próprio vídeo
+  const handleLocalVolumeChange = (event) => {
+    const newVolume = parseFloat(event.target.value);
+    setLocalVolume(newVolume);
+    if (localVideoRef.current) {
+      localVideoRef.current.volume = newVolume;
+    }
+  };
+
   const handleRemoteVolumeChange = (event) => {
     if (remoteVideoRef.current) {
       remoteVideoRef.current.volume = event.target.value;
@@ -348,58 +363,103 @@ function App() {
 
   return (
     <div className="app-container">
-      <div className="main-content-wrapper">
-        <div className="video-section-main"> {/* Novo container para o vídeo principal e seu mini-vídeo */}
-          <h1 className="app-title">LinkYou</h1>
-          <p className="connection-status">Status: {connectionStatus}</p>
+      <div className="main-layout-wrapper"> {/* NOVA DIV: Wrapper principal para o layout de duas colunas */}
 
-          <div className="remote-video-container">
-            <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
-            <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video> {/* Seu vídeo dentro do container remoto */}
-            <div className="media-controls remote-controls-overlay"> {/* Controles overlay */}
-                <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    defaultValue="1"
-                    onChange={handleRemoteVolumeChange}
-                    title="Volume do Outro"
-                />
-                <button onClick={toggleFullScreen} title="Tela Cheia">
-                    [ ]
-                </button>
-                <button className="report-button" title="Denunciar Usuário">
-                    🚩
-                </button>
+        {/* BARRA LATERAL ESQUERDA (SIDEBAR) */}
+        <div className="sidebar-left">
+          <div className="app-logo-section">
+            {/* Ícone ou Logo do LinkYou (placeholder) */}
+            <img src="/linkyou_logo.png" alt="LinkYou Logo" className="app-logo" /> {/* Você pode criar um logo e colocar na pasta public */}
+            <h1 className="app-title">LinkYou</h1>
+            <p className="users-online">427.816 usuários online</p> {/* Placeholder para contador de usuários */}
+          </div>
+
+          {/* Botões de Download (placeholders) */}
+          <div className="download-buttons">
+            <button className="download-btn">DISPONÍVEL NO <br/> Google Play</button>
+            <button className="download-btn">Descarregar na <br/> App Store</button>
+          </div>
+
+          {/* Volume Local (slider) */}
+          <div className="local-volume-control">
+              <span className="volume-icon">🔊</span> Volume Local:
+              <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={localVolume}
+                  onChange={handleLocalVolumeChange}
+                  title="Volume Local"
+              />
+          </div>
+
+          {/* Botões de Ação Principais (Iniciar / Parar) */}
+          <div className="main-action-buttons">
+            <button id="startButton" onClick={startNewCall}>Iniciar</button> {/* Renomeado de Próximo para Iniciar */}
+            <button id="stopButton">Parar</button> {/* Placeholder para botão Parar */}
+          </div>
+
+          {/* Filtros (País, Eu sou) - Placeholders */}
+          <div className="filter-sections">
+            <button className="filter-button">País 🌍</button>
+            <button className="filter-button">Eu sou 👤</button>
+          </div>
+
+          {/* Área de Regras / Informações */}
+          <div className="rules-section">
+            <p className="rules-text">Ao clicar em "Iniciar", você concorda em seguir nossas <a href="#" target="_blank">regras</a>. Qualquer violação resultará na suspensão da conta. Certifique-se de que seu rosto esteja claramente visível para o interlocutor.</p>
+          </div>
+
+          {/* Área de Chat (futuramente funcional) */}
+          <div className="chat-section">
+            <h3>Escreva sua mensagem aqui e pressi...</h3> {/* Título de placeholder para chat */}
+            <div className="chat-messages">
+                <p>Bem-vindo ao chat!</p>
             </div>
+            <input type="text" placeholder="Digite sua mensagem..." className="chat-input" />
+            <button className="send-button">Enviar</button>
           </div>
         </div>
 
-        <div className="sidebar-controls">
-            <div className="top-sidebar-controls"> {/* Agrupar controles de mídia locais e botão próximo */}
-                <div className="media-controls local-controls-sidebar">
-                    <button onClick={toggleMic}>
-                        {isMicMuted ? '🎤 Ligar' : '🔇 Mic'}
-                    </button>
-                    <button onClick={toggleCam}>
-                        {isCamOff ? '🎥 Ligar' : '📷 Cam'}
-                    </button>
-                </div>
-                <div className="next-user-section">
-                    <button id="nextButton" onClick={startNewCall}>Próximo Usuário</button>
-                </div>
-            </div>
-            <div className="chat-section">
-                <h3>Chat</h3>
-                <div className="chat-messages">
-                    <p>Bem-vindo ao chat!</p>
-                </div>
-                <input type="text" placeholder="Digite sua mensagem..." className="chat-input" />
-                <button className="send-button">Enviar</button>
-            </div>
+        {/* ÁREA PRINCIPAL DO VÍDEO (DIREITA) */}
+        <div className="video-main-area">
+          <p className="connection-status">{connectionStatus}</p> {/* Status sobre o vídeo */}
+
+          <div className="remote-video-display-container"> {/* Container para o vídeo remoto */}
+            <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
+            <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video> {/* Seu vídeo menor no canto */}
+          </div>
+
+          {/* Controles de Mídia sobre o vídeo remoto */}
+          <div className="media-controls-overlay">
+              <button onClick={toggleMic} className="media-control-button">
+                  {isMicMuted ? '🔇' : '🎤'}
+              </button>
+              <button onClick={toggleCam} className="media-control-button">
+                  {isCamOff ? '🎥' : '📷'}
+              </button>
+              {/* Slider de Volume Remoto */}
+              <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  defaultValue="1"
+                  onChange={handleRemoteVolumeChange}
+                  title="Volume do Outro"
+                  className="volume-slider"
+              />
+              <button onClick={toggleFullScreen} title="Tela Cheia" className="media-control-button">
+                  [ ]
+              </button>
+              <button className="report-button media-control-button" title="Denunciar Usuário">
+                  🚩
+              </button>
+          </div>
         </div>
-      </div>
+
+      </div> {/* Fim do main-layout-wrapper */}
     </div>
   );
 }

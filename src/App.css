@@ -1,4 +1,4 @@
-/* src/App.css - Estilo Inspirado no Chatruletka e Chat de Texto */
+/* src/App.css - Estilo Inspirado no Chatruletka e Chat de Texto Funcional */
 
 :root {
   /* Paleta Inspirada no Chatruletka (com tons da sua "Cibernético Elegante") */
@@ -38,7 +38,7 @@ body {
 }
 
 .app-container {
-  background-color: var(--bg-color); /* Ocupa toda a tela */
+  background-color: var(--bg-color);
   width: 100vw;
   min-height: 100vh;
   display: flex;
@@ -59,11 +59,11 @@ body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  box-shadow: 2px 0 10px var(--shadow-color); /* Sombra para o lado */
-  min-width: 280px; /* Largura mínima da sidebar */
-  max-width: 100%; /* Ocupa 100% da largura em mobile */
-  flex-shrink: 0; /* Não permite que a sidebar encolha */
-  border-bottom: 1px solid var(--border-color); /* Borda em mobile */
+  box-shadow: 2px 0 10px var(--shadow-color);
+  min-width: 280px;
+  max-width: 100%;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .app-logo-section {
@@ -71,11 +71,11 @@ body {
   margin-bottom: 20px;
 }
 .app-logo {
-    width: 80px; /* Tamanho do seu logo */
+    width: 80px;
     height: 80px;
     margin-bottom: 10px;
 }
-.app-title-sidebar { /* Título específico para a sidebar */
+.app-title-sidebar {
   color: var(--highlight-color);
   font-size: 2.2em;
   margin: 0;
@@ -236,10 +236,6 @@ body {
   color: var(--text-color-light);
   line-height: 1.4;
 }
-.chat-messages p {
-  margin: 5px 0;
-  word-wrap: break-word;
-}
 /* Estilos para mensagens de chat específicas */
 .chat-messages .chat-message.me {
     text-align: right;
@@ -258,7 +254,7 @@ body {
 
 
 .chat-input {
-  width: calc(100% - 22px);
+  width: calc(100% - 22px); /* Ajusta largura */
   padding: 10px;
   border: 1px solid var(--border-color);
   border-radius: 5px;
@@ -378,7 +374,7 @@ body {
     transform: scale(1.1);
 }
 .media-control-button.report-button {
-    background-color: var(--button-danger); /* Cor de perigo para denúncia */
+    background-color: var(--button-danger);
 }
 .media-control-button.report-button:hover {
     background-color: var(--button-danger-hover);
@@ -405,17 +401,16 @@ body {
     max-width: 320px;
     height: 100%;
     border-radius: 12px 0 0 12px;
-    border-right: 1px solid var(--border-color); /* Borda para separar do vídeo */
-    box-shadow: none; /* Remove sombra lateral em desktop */
+    border-right: 1px solid var(--border-color);
+    box-shadow: none;
   }
 
-  /* Ajusta a seção de logo na sidebar para ter mais espaço no topo */
   .app-logo-section {
     margin-top: 10px;
     margin-bottom: 30px;
   }
   .app-title-sidebar {
-    font-size: 2.5em; /* Aumenta um pouco mais no desktop */
+    font-size: 2.5em;
   }
 
   .video-main-area {
@@ -427,38 +422,56 @@ body {
   .remote-video-display-container {
     height: 100%;
     width: 100%;
-    border-radius: 1rem; /* Bordas arredondadas maiores para o vídeo principal */
+    border-radius: 1rem;
   }
 
   #remoteVideo {
-    border-radius: 1rem; /* Bordas arredondadas maiores para o vídeo em si */
+    object-fit: contain; /* Mantém o aspect ratio original do vídeo */
+    border-radius: 1rem;
+  }
+
+  /* Seu vídeo pequeno no canto */
+  #localVideo {
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 112.5px;
+  }
+
+  /* Controles de mídia sobre o vídeo principal */
+  .media-controls-overlay {
+    top: 20px;
+    right: 20px;
+    transform: none;
+    left: auto;
   }
 }
 
-/* Ajustes para mobile */
+/* Ajustes para mobile (para garantir que o layout fique bom, já que o foco é desktop agora) */
 @media (max-width: 767px) {
     .sidebar-left {
-        padding-bottom: 0; /* Remove padding inferior para que o chat possa ter margin-bottom */
+        padding-bottom: 20px; /* Adiciona padding inferior para espaço */
         gap: 15px; /* Menos espaço entre seções */
+        border-bottom: 1px solid var(--border-color); /* Borda para separar do vídeo */
     }
     .rules-section, .filter-sections, .download-buttons, .main-action-buttons, .local-volume-control {
         margin-bottom: 15px; /* Reduz margens inferiores para economizar espaço */
     }
     .chat-section {
-        margin-top: 15px; /* Garante que o chat não fique colado na seção anterior */
-        min-height: 200px; /* Altura mínima para o chat em mobile */
-        height: auto; /* Deixa altura flexível */
+        margin-top: 15px;
+        min-height: 200px;
+        height: auto;
     }
     .video-main-area {
-        padding: 10px; /* Menos padding em mobile */
+        padding: 10px;
     }
     .remote-video-display-container {
-        border-radius: 8px; /* Bordas menores para mobile */
+        border-radius: 8px;
     }
     #remoteVideo, #localVideo {
-        border-radius: 8px; /* Bordas menores para mobile */
+        border-radius: 8px;
     }
-    .media-controls-overlay { /* Controles de mídia no topo/direita */
+    .media-controls-overlay {
         top: 10px;
         right: 10px;
         padding: 5px 10px;
@@ -470,6 +483,35 @@ body {
         font-size: 1em;
     }
     .volume-slider {
-        width: 60px; /* Slider menor em mobile */
+        width: 60px;
+    }
+    /* NOVO: Ajuste para o app-title e connection-status em mobile */
+    .app-title {
+        position: static;
+        margin: 15px 0 5px; /* Margem para separar de outros elementos */
+        font-size: 2em;
+    }
+    .connection-status {
+        position: static;
+        margin-bottom: 15px;
+        font-size: 0.9em;
+    }
+
+    /* Em mobile, o vídeo remoto pode ocupar a largura total e o local ficará dentro dele com object-fit: cover */
+    .remote-video-display-container {
+        width: 100%;
+        padding-top: 56.25%; /* Mantém proporção 16:9 */
+        margin-top: 15px; /* Espaço após status */
+    }
+    #remoteVideo {
+        object-fit: cover; /* Preenche o espaço disponível, cortando se necessário */
+    }
+    #localVideo {
+        width: 120px; /* Mini-vídeo menor em mobile */
+        height: 67.5px; /* Proporção 16:9 */
+        bottom: 10px;
+        right: 10px;
+        border-width: 1px;
+        box-shadow: 0 0 5px rgba(75, 192, 200, 0.5);
     }
 }

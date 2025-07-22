@@ -24,11 +24,10 @@ function App() {
   const [isCamOff, setIsCamOff] = useState(false);
   const [localVolume, setLocalVolume] = useState(1);
 
-  // NOVOS ESTADOS E REFS PARA O CHAT
-  const [messages, setMessages] = useState([]); // Armazena as mensagens do chat
-  const [currentMessage, setCurrentMessage] = useState(''); // Armazena a mensagem digitada
-  const chatMessagesRef = useRef(null); // Ref para o container de mensagens (para scroll automático)
-  const dataChannel = useRef(null); // Ref para o DataChannel WebRTC
+  const [messages, setMessages] = useState([]);
+  const [currentMessage, setCurrentMessage] = useState('');
+  const chatMessagesRef = useRef(null);
+  const dataChannel = useRef(null);
 
   // useEffect para scrollar o chat para o final automaticamente
   useEffect(() => {
@@ -140,7 +139,7 @@ function App() {
              isNegotiating.current = true;
              try {
                 await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.answer));
-                while (iceCandidateQueue.current.length > 0) { // Corrigido para .current.length
+                while (iceCandidateQueue.current.length > 0) {
                     const candidate = iceCandidateQueue.current.shift();
                     try {
                         await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -175,7 +174,7 @@ function App() {
           }
           break;
         case 'call_ended':
-          setConnectionStatus('A chamada foi encerrada pelo outro usuário. Clique em "Próximo" para encontrar um novo.');
+          setConnectionStatus('A chamada foi encerrada pelo outro usuário. Clique em "Iniciar" para encontrar um novo.');
           if (peerConnection.current) {
             peerConnection.current.close();
             peerConnection.current = null;
@@ -213,7 +212,7 @@ function App() {
       if (peerConnection.current) {
         peerConnection.current.close();
       }
-      if (dataChannel.current) {
+      if (dataChannel.current) { // Garante que o DataChannel seja fechado na limpeza
           dataChannel.current.close();
       }
       iceCandidateQueue.current = [];
@@ -229,8 +228,7 @@ function App() {
     if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = null;
     }
-    // Limpa o chat ao iniciar nova conexão P2P
-    setMessages([]);
+    setMessages([]); // Limpa o chat ao iniciar nova conexão P2P
     if (dataChannel.current) { // Fecha o DataChannel anterior
         dataChannel.current.close();
         dataChannel.current = null;
@@ -369,8 +367,7 @@ function App() {
     if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = null;
     }
-    // Limpa o chat e DataChannel ao iniciar nova busca
-    setMessages([]);
+    setMessages([]); // Limpa o chat ao iniciar nova busca
     if (dataChannel.current) {
         dataChannel.current.close();
         dataChannel.current = null;
@@ -465,7 +462,7 @@ function App() {
         <div className="sidebar-left">
           <div className="app-logo-section">
             <img src="/linkyou_logo.png" alt="LinkYou Logo" className="app-logo" />
-            <h1 className="app-title-sidebar">LinkYou</h1> {/* Título específico para sidebar */}
+            <h1 className="app-title-sidebar">LinkYou</h1>
             <p className="users-online">427.816 usuários online</p>
           </div>
 

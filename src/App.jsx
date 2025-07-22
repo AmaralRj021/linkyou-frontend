@@ -1,8 +1,6 @@
 // src/App.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import './App.css';
-// Importe ícones se for usá-los, por exemplo:
-// import { Mic, MicOff, Video, VideoOff, Fullscreen, X } from 'lucide-react'; // Exemplo de importação de biblioteca de ícones
 
 const STUN_SERVER = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
@@ -24,9 +22,21 @@ function App() {
 
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isCamOff, setIsCamOff] = useState(false);
+  const [localVolume, setLocalVolume] = useState(1);
 
-  // NOVO: estado para o volume do vídeo local (para o slider)
-  const [localVolume, setLocalVolume] = useState(1); // 0 a 1
+  // NOVOS ESTADOS E REFS PARA O CHAT
+  const [messages, setMessages] = useState([]); // Armazena as mensagens do chat
+  const [currentMessage, setCurrentMessage] = useState(''); // Armazena a mensagem digitada
+  const chatMessagesRef = useRef(null); // Ref para o container de mensagens (para scroll automático)
+  const dataChannel = useRef(null); // Ref para o DataChannel WebRTC
+
+  // useEffect para scrollar o chat para o final automaticamente
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [messages]);
+
 
   // useEffect 1: Captura do Vídeo Local
   useEffect(() => {
@@ -36,7 +46,7 @@ function App() {
         setLocalStream(stream);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
-          localVideoRef.current.volume = localVolume; // Define o volume inicial
+          localVideoRef.current.volume = localVolume;
         }
         setConnectionStatus('Câmera e microfone prontos. Conectando ao servidor...');
       } catch (error) {
@@ -130,7 +140,7 @@ function App() {
              isNegotiating.current = true;
              try {
                 await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.answer));
-                while (iceCandidateQueue.current.length > 0) {
+                while (iceCandidateQueue.current.length > 0) { // Corrigido para .current.length
                     const candidate = iceCandidateQueue.current.shift();
                     try {
                         await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -175,6 +185,11 @@ function App() {
           }
           isInitiator.current = false;
           iceCandidateQueue.current = [];
+          setMessages([]); // Limpa as mensagens do chat ao encerrar a chamada
+          if (dataChannel.current) { // Fecha o DataChannel
+              dataChannel.current.close();
+              dataChannel.current = null;
+          }
           break;
         default:
           console.warn('Tipo de mensagem desconhecido:', message.type);
@@ -198,6 +213,9 @@ function App() {
       if (peerConnection.current) {
         peerConnection.current.close();
       }
+      if (dataChannel.current) {
+          dataChannel.current.close();
+      }
       iceCandidateQueue.current = [];
     };
   }, [localStream]);
@@ -211,6 +229,13 @@ function App() {
     if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = null;
     }
+    // Limpa o chat ao iniciar nova conexão P2P
+    setMessages([]);
+    if (dataChannel.current) { // Fecha o DataChannel anterior
+        dataChannel.current.close();
+        dataChannel.current = null;
+    }
+
 
     peerConnection.current = new RTCPeerConnection(STUN_SERVER);
     console.log("RTCPeerConnection criado.");
@@ -218,6 +243,41 @@ function App() {
     stream.getTracks().forEach(track => {
       peerConnection.current.addTrack(track, stream);
     });
+
+    // Cria o DataChannel se este peer for o iniciador
+    if (shouldCreateOffer) {
+        dataChannel.current = peerConnection.current.createDataChannel("chat");
+        console.log("DataChannel criado como iniciador.");
+        setupDataChannelEvents(dataChannel.current);
+    } else {
+        // Se não for o iniciador, espera o DataChannel ser recebido
+        peerConnection.current.ondatachannel = (event) => {
+            dataChannel.current = event.channel;
+            console.log("DataChannel recebido.");
+            setupDataChannelEvents(dataChannel.current);
+        };
+    }
+
+    // Função para configurar os eventos do DataChannel
+    const setupDataChannelEvents = (dc) => {
+        dc.onopen = () => {
+            console.log("DataChannel aberto!");
+            setMessages(prev => [...prev, { from: 'system', text: 'Chat conectado!' }]);
+        };
+        dc.onmessage = (event) => {
+            console.log("Mensagem DataChannel recebida:", event.data);
+            setMessages(prev => [...prev, { from: 'remote', text: event.data }]);
+        };
+        dc.onclose = () => {
+            console.log("DataChannel fechado.");
+            setMessages(prev => [...prev, { from: 'system', text: 'Chat desconectado.' }]);
+        };
+        dc.onerror = (err) => {
+            console.error("Erro no DataChannel:", err);
+            setMessages(prev => [...prev, { from: 'system', text: 'Erro no chat.' }]);
+        };
+    };
+
 
     peerConnection.current.ontrack = (event) => {
       if (remoteVideoRef.current && event.streams[0]) {
@@ -237,14 +297,19 @@ function App() {
     peerConnection.current.oniceconnectionstatechange = () => {
         console.log('Estado da conexão ICE:', peerConnection.current.iceConnectionState);
         if (peerConnection.current.iceConnectionState === 'disconnected' || peerConnection.current.iceConnectionState === 'failed') {
-            setConnectionStatus('Conexão WebRTC perdida. Clique em "Próximo" para tentar novamente.');
+            setConnectionStatus('Conexão WebRTC perdida. Clique em "Iniciar" para tentar novamente.');
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
             isInitiator.current = false;
             if (peerConnection.current) {
                 peerConnection.current.close();
                 peerConnection.current = null;
             }
+            if (dataChannel.current) { // Fecha DataChannel se a conexão P2P cair
+                dataChannel.current.close();
+                dataChannel.current = null;
+            }
             iceCandidateQueue.current = [];
+            setMessages([]); // Limpa chat
         } else if (peerConnection.current.iceConnectionState === 'connected') {
             setConnectionStatus('Conectado! Chamada ativa.');
         }
@@ -304,6 +369,13 @@ function App() {
     if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = null;
     }
+    // Limpa o chat e DataChannel ao iniciar nova busca
+    setMessages([]);
+    if (dataChannel.current) {
+        dataChannel.current.close();
+        dataChannel.current = null;
+    }
+
     isInitiator.current = false;
     iceCandidateQueue.current = [];
 
@@ -334,7 +406,6 @@ function App() {
     }
   };
 
-  // NOVO: Função para controlar o volume do seu próprio vídeo
   const handleLocalVolumeChange = (event) => {
     const newVolume = parseFloat(event.target.value);
     setLocalVolume(newVolume);
@@ -361,26 +432,48 @@ function App() {
     }
   };
 
+  // FUNÇÕES DE CHAT
+  const handleMessageChange = (event) => {
+    setCurrentMessage(event.target.value);
+  };
+
+  const sendMessage = () => {
+    if (dataChannel.current && dataChannel.current.readyState === 'open' && currentMessage.trim() !== '') {
+      dataChannel.current.send(currentMessage.trim());
+      setMessages(prev => [...prev, { from: 'me', text: currentMessage.trim() }]);
+      setCurrentMessage(''); // Limpa o input
+    } else {
+        console.warn("DataChannel não está aberto para enviar mensagem ou mensagem vazia.");
+        if (currentMessage.trim() !== '') { // Se a mensagem não está vazia, mas o chat não está aberto
+            setMessages(prev => [...prev, { from: 'system', text: 'Chat não conectado. Tente iniciar uma chamada.' }]);
+            setCurrentMessage('');
+        }
+    }
+  };
+
+  const handleKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      sendMessage();
+    }
+  };
+
   return (
     <div className="app-container">
-      <div className="main-layout-wrapper"> {/* NOVA DIV: Wrapper principal para o layout de duas colunas */}
+      <div className="main-layout-wrapper">
 
         {/* BARRA LATERAL ESQUERDA (SIDEBAR) */}
         <div className="sidebar-left">
           <div className="app-logo-section">
-            {/* Ícone ou Logo do LinkYou (placeholder) */}
-            <img src="/linkyou_logo.png" alt="LinkYou Logo" className="app-logo" /> {/* Você pode criar um logo e colocar na pasta public */}
-            <h1 className="app-title">LinkYou</h1>
-            <p className="users-online">427.816 usuários online</p> {/* Placeholder para contador de usuários */}
+            <img src="/linkyou_logo.png" alt="LinkYou Logo" className="app-logo" />
+            <h1 className="app-title-sidebar">LinkYou</h1> {/* Título específico para sidebar */}
+            <p className="users-online">427.816 usuários online</p>
           </div>
 
-          {/* Botões de Download (placeholders) */}
           <div className="download-buttons">
             <button className="download-btn">DISPONÍVEL NO <br/> Google Play</button>
             <button className="download-btn">Descarregar na <br/> App Store</button>
           </div>
 
-          {/* Volume Local (slider) */}
           <div className="local-volume-control">
               <span className="volume-icon">🔊</span> Volume Local:
               <input
@@ -394,52 +487,60 @@ function App() {
               />
           </div>
 
-          {/* Botões de Ação Principais (Iniciar / Parar) */}
           <div className="main-action-buttons">
-            <button id="startButton" onClick={startNewCall}>Iniciar</button> {/* Renomeado de Próximo para Iniciar */}
-            <button id="stopButton">Parar</button> {/* Placeholder para botão Parar */}
+            <button id="startButton" onClick={startNewCall}>Iniciar</button>
+            <button id="stopButton">Parar</button>
           </div>
 
-          {/* Filtros (País, Eu sou) - Placeholders */}
           <div className="filter-sections">
             <button className="filter-button">País 🌍</button>
             <button className="filter-button">Eu sou 👤</button>
           </div>
 
-          {/* Área de Regras / Informações */}
           <div className="rules-section">
             <p className="rules-text">Ao clicar em "Iniciar", você concorda em seguir nossas <a href="#" target="_blank">regras</a>. Qualquer violação resultará na suspensão da conta. Certifique-se de que seu rosto esteja claramente visível para o interlocutor.</p>
           </div>
 
-          {/* Área de Chat (futuramente funcional) */}
+          {/* Área de Chat */}
           <div className="chat-section">
-            <h3>Escreva sua mensagem aqui e pressi...</h3> {/* Título de placeholder para chat */}
-            <div className="chat-messages">
-                <p>Bem-vindo ao chat!</p>
+            <h3>Escreva sua mensagem aqui e pressi...</h3>
+            <div className="chat-messages" ref={chatMessagesRef}>
+                {messages.map((msg, index) => (
+                    <p key={index} className={`chat-message ${msg.from}`}>
+                        {msg.from === 'me' ? 'Você: ' : msg.from === 'remote' ? 'Parceiro: ' : ''}
+                        {msg.text}
+                    </p>
+                ))}
             </div>
-            <input type="text" placeholder="Digite sua mensagem..." className="chat-input" />
-            <button className="send-button">Enviar</button>
+            <input
+                type="text"
+                placeholder="Digite sua mensagem..."
+                className="chat-input"
+                value={currentMessage}
+                onChange={handleMessageChange}
+                onKeyPress={handleKeyPress}
+            />
+            <button className="send-button" onClick={sendMessage}>Enviar</button>
           </div>
         </div>
 
         {/* ÁREA PRINCIPAL DO VÍDEO (DIREITA) */}
         <div className="video-main-area">
-          <p className="connection-status">{connectionStatus}</p> {/* Status sobre o vídeo */}
+          <p className="connection-status">{connectionStatus}</p>
 
-          <div className="remote-video-display-container"> {/* Container para o vídeo remoto */}
+          <div className="remote-video-display-container">
             <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
-            <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video> {/* Seu vídeo menor no canto */}
+            <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video>
           </div>
 
-          {/* Controles de Mídia sobre o vídeo remoto */}
+          {/* Controles de Mídia Flutuantes sobre o vídeo principal */}
           <div className="media-controls-overlay">
-              <button onClick={toggleMic} className="media-control-button">
+              <button onClick={toggleMic} className="media-control-button" title={isMicMuted ? 'Ligar Microfone' : 'Desligar Microfone'}>
                   {isMicMuted ? '🔇' : '🎤'}
               </button>
-              <button onClick={toggleCam} className="media-control-button">
+              <button onClick={toggleCam} className="media-control-button" title={isCamOff ? 'Ligar Câmera' : 'Desligar Câmera'}>
                   {isCamOff ? '🎥' : '📷'}
               </button>
-              {/* Slider de Volume Remoto */}
               <input
                   type="range"
                   min="0"
@@ -459,7 +560,7 @@ function App() {
           </div>
         </div>
 
-      </div> {/* Fim do main-layout-wrapper */}
+      </div>
     </div>
   );
 }

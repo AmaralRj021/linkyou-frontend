@@ -29,7 +29,6 @@ function App() {
   const chatMessagesRef = useRef(null);
   const dataChannel = useRef(null);
 
-  // useEffect para scrollar o chat para o final automaticamente
   useEffect(() => {
     if (chatMessagesRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
@@ -37,7 +36,6 @@ function App() {
   }, [messages]);
 
 
-  // useEffect 1: Captura do Vídeo Local
   useEffect(() => {
     async function startLocalStream() {
       try {
@@ -63,7 +61,6 @@ function App() {
     };
   }, []);
 
-  // useEffect 2: Conexão com o Servidor de Sinalização e Lógica de Mensagens
   useEffect(() => {
     if (!localStream) return;
 
@@ -184,8 +181,8 @@ function App() {
           }
           isInitiator.current = false;
           iceCandidateQueue.current = [];
-          setMessages([]); // Limpa as mensagens do chat ao encerrar a chamada
-          if (dataChannel.current) { // Fecha o DataChannel
+          setMessages([]);
+          if (dataChannel.current) {
               dataChannel.current.close();
               dataChannel.current = null;
           }
@@ -212,7 +209,7 @@ function App() {
       if (peerConnection.current) {
         peerConnection.current.close();
       }
-      if (dataChannel.current) { // Garante que o DataChannel seja fechado na limpeza
+      if (dataChannel.current) {
           dataChannel.current.close();
       }
       iceCandidateQueue.current = [];
@@ -228,8 +225,8 @@ function App() {
     if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = null;
     }
-    setMessages([]); // Limpa o chat ao iniciar nova conexão P2P
-    if (dataChannel.current) { // Fecha o DataChannel anterior
+    setMessages([]);
+    if (dataChannel.current) {
         dataChannel.current.close();
         dataChannel.current = null;
     }
@@ -242,13 +239,11 @@ function App() {
       peerConnection.current.addTrack(track, stream);
     });
 
-    // Cria o DataChannel se este peer for o iniciador
     if (shouldCreateOffer) {
         dataChannel.current = peerConnection.current.createDataChannel("chat");
         console.log("DataChannel criado como iniciador.");
         setupDataChannelEvents(dataChannel.current);
     } else {
-        // Se não for o iniciador, espera o DataChannel ser recebido
         peerConnection.current.ondatachannel = (event) => {
             dataChannel.current = event.channel;
             console.log("DataChannel recebido.");
@@ -256,7 +251,6 @@ function App() {
         };
     }
 
-    // Função para configurar os eventos do DataChannel
     const setupDataChannelEvents = (dc) => {
         dc.onopen = () => {
             console.log("DataChannel aberto!");
@@ -302,12 +296,12 @@ function App() {
                 peerConnection.current.close();
                 peerConnection.current = null;
             }
-            if (dataChannel.current) { // Fecha DataChannel se a conexão P2P cair
+            if (dataChannel.current) {
                 dataChannel.current.close();
                 dataChannel.current = null;
             }
             iceCandidateQueue.current = [];
-            setMessages([]); // Limpa chat
+            setMessages([]);
         } else if (peerConnection.current.iceConnectionState === 'connected') {
             setConnectionStatus('Conectado! Chamada ativa.');
         }
@@ -367,7 +361,7 @@ function App() {
     if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = null;
     }
-    setMessages([]); // Limpa o chat ao iniciar nova busca
+    setMessages([]);
     if (dataChannel.current) {
         dataChannel.current.close();
         dataChannel.current = null;
@@ -429,7 +423,6 @@ function App() {
     }
   };
 
-  // FUNÇÕES DE CHAT
   const handleMessageChange = (event) => {
     setCurrentMessage(event.target.value);
   };
@@ -438,10 +431,10 @@ function App() {
     if (dataChannel.current && dataChannel.current.readyState === 'open' && currentMessage.trim() !== '') {
       dataChannel.current.send(currentMessage.trim());
       setMessages(prev => [...prev, { from: 'me', text: currentMessage.trim() }]);
-      setCurrentMessage(''); // Limpa o input
+      setCurrentMessage('');
     } else {
         console.warn("DataChannel não está aberto para enviar mensagem ou mensagem vazia.");
-        if (currentMessage.trim() !== '') { // Se a mensagem não está vazia, mas o chat não está aberto
+        if (currentMessage.trim() !== '') {
             setMessages(prev => [...prev, { from: 'system', text: 'Chat não conectado. Tente iniciar uma chamada.' }]);
             setCurrentMessage('');
         }

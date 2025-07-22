@@ -91,17 +91,9 @@ function App() {
           isInitiator.current = false;
           break;
         case 'start_call':
-          setConnectionStatus(`Pareando com o usuário ${message.peerId}...`);
-          setIsWaitingForCall(false);
-
-          isInitiator.current = message.ownId < message.peerId;
-          console.log(`Sou o iniciador? ${isInitiator.current} (Meu ID: ${message.ownId}, Peer ID: ${message.peerId})`);
-
-          if (!peerConnection.current) {
-            await createPeerConnection(localStream, isInitiator.current);
-          } else {
-              console.log("PeerConnection já existe.");
-          }
+          // Lógica de iniciar chamada movida para uma função separada para clareza
+          console.log(`Recebido start_call. Own ID: ${message.ownId}, Peer ID: ${message.peerId}.`);
+          handleStartCall(message.ownId, message.peerId);
           break;
         case 'offer':
           if (peerConnection.current && peerConnection.current.signalingState === 'stable' && !isNegotiating.current) {
@@ -216,6 +208,21 @@ function App() {
     };
   }, [localStream]);
 
+  // Função separada para lidar com start_call, garantindo a inicialização
+  const handleStartCall = async (ownId, peerId) => {
+    setConnectionStatus(`Pareando com o usuário ${peerId}...`);
+    setIsWaitingForCall(false);
+
+    isInitiator.current = ownId < peerId;
+    console.log(`Sou o iniciador? ${isInitiator.current} (Meu ID: ${ownId}, Peer ID: ${peerId})`);
+
+    // Sempre crie um novo PeerConnection ao receber start_call,
+    // e passe a flag isInitiator para que ele crie a oferta ou espere.
+    await createPeerConnection(localStream, isInitiator.current);
+    console.log("createPeerConnection chamado com isInitiator:", isInitiator.current);
+  };
+
+
   const createPeerConnection = async (stream, shouldCreateOffer) => {
     if (peerConnection.current) {
         peerConnection.current.close();
@@ -308,15 +315,12 @@ function App() {
     };
 
     peerConnection.current.onnegotiationneeded = async () => {
-        if (!shouldCreateOffer || peerConnection.current.localDescription) {
-             console.warn('onnegotiationneeded disparado mas oferta já foi criada ou não sou o iniciador. Ignorando.', peerConnection.current.signalingState, 'shouldCreateOffer param:', shouldCreateOffer);
-             return;
-        }
-
-        if (peerConnection.current.signalingState === 'stable' && !isNegotiating.current) {
-            isNegotiating.current = true;
-            console.log('onnegotiationneeded disparado, criando oferta (fallback)...');
-            try {
+        // Esta função agora é mais um fallback e para renegociações
+        // A oferta inicial é criada explicitamente na createPeerConnection se shouldCreateOffer é true
+        if (shouldCreateOffer && peerConnection.current.signalingState === 'stable' && !isNegotiating.current) {
+             console.log('onnegotiationneeded disparado e sou iniciador, mas já deveria ter criado oferta. Recriando/enviando (fallback)...');
+             isNegotiating.current = true;
+             try {
                 const offer = await peerConnection.current.createOffer();
                 if (peerConnection.current.signalingState !== 'stable') {
                     console.warn('Estado mudou antes de setar a oferta local. Abortando negociação.');
@@ -324,18 +328,22 @@ function App() {
                 }
                 await peerConnection.current.setLocalDescription(offer);
                 if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ type: 'offer', offer: offer }));
-                    console.log('Oferta WebRTC enviada via WS (fallback).');
+                    ws.current.send(JSON.stringify({ type: 'offer', offer: offer }));
+                    console.log('Oferta WebRTC enviada via WS (onnegotiationneeded fallback).');
                 }
             } catch (err) {
-                console.error('Erro ao criar ou enviar oferta (fallback):', err);
+                console.error('Erro ao criar ou enviar oferta (onnegotiationneeded fallback):', err);
             } finally {
                 isNegotiating.current = false;
             }
-        }
+         } else {
+             console.warn('onnegotiationneeded disparado mas não é o momento para criar oferta.', peerConnection.current.signalingState, 'isInitiator:', isInitiator.current, 'isNegotiating:', isNegotiating.current);
+         }
     };
 
+    // NOVO: A oferta é criada aqui se shouldCreateOffer é true, logo após o setup do PeerConnection
     if (shouldCreateOffer) {
+        console.log("Iniciador: Criando oferta explicitamente.");
         try {
             isNegotiating.current = true;
             const offer = await peerConnection.current.createOffer();
@@ -447,14 +455,11 @@ function App() {
     }
   };
 
-  // NOVO: Função para lidar com a denúncia
   const handleReportUser = () => {
-    // Apenas envia a denúncia se houver uma conexão peer estabelecida
     if (peerConnection.current && peerConnection.current.connectionState === 'connected') {
-        const reportedPeerId = "desconhecido"; // Em um sistema real, você teria o ID do peer aqui
-        const reason = prompt("Por favor, descreva o motivo da denúncia (opcional):"); // Pede um motivo
+        const reportedPeerId = "desconhecido";
+        const reason = prompt("Por favor, descreva o motivo da denúncia (opcional):");
         
-        // Envia uma mensagem para o servidor de sinalização
         if (ws.current && ws.current.readyState === WebSocket.OPEN) {
             ws.current.send(JSON.stringify({ 
                 type: 'report_user', 
@@ -470,9 +475,8 @@ function App() {
         alert("Não há usuário conectado para denunciar.");
         console.warn("Tentativa de denúncia sem conexão ativa.");
     }
-    startNewCall(); // Inicia uma nova chamada após denunciar
+    startNewCall();
   };
-
 
   return (
     <div className="app-container">

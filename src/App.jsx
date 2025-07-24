@@ -1,41 +1,568 @@
 // src/App.jsx
 import React, { useEffect, useRef, useState } from 'react';
-import './App.css';
 
-const STUN_SERVER = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-};
+// Componente para injetar os estilos CSS diretamente no DOM.
+const GlobalStyles = () => (
+  <style>{`
+    /* src/App.css - Estilo Inspirado no Chatruletka e Chat de Texto Funcional */
+
+    :root {
+      /* Paleta Inspirada no Chatruletka (com tons da sua "Cibernético Elegante") */
+      --bg-color: #121212; /* Fundo principal escuro */
+      --sidebar-bg: #1e1e1e; /* Fundo da barra lateral */
+      --video-bg: #000; /* Fundo para a área de vídeo sem imagem */
+      --button-primary: #007bff; /* Azul vibrante para Iniciar */
+      --button-primary-hover: #0056b3;
+      --button-danger: #dc3545; /* Vermelho para Parar */
+      --button-danger-hover: #bd2130;
+      --button-secondary: #343a40; /* Botões secundários (controles de mídia, download) */
+      --button-secondary-hover: #23272b;
+      --text-color-light: #f8f9fa; /* Texto claro */
+      --text-color-muted: #adb5bd; /* Texto secundário/status */
+      --border-color: #333; /* Borda suave */
+      --input-bg: #2b2b2b; /* Fundo de inputs */
+      --input-text: #f8f9fa; /* Texto de inputs */
+      --highlight-color: #4bc0c8; /* Cor de destaque (do seu ciano) */
+      --shadow-color: rgba(0, 0, 0, 0.7);
+      --button-text-color: #ffffff;
+      --chat-bg: #252525;
+      --primary-hover: #3ca9b3;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: var(--bg-color);
+      color: var(--text-color-light);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .app-container {
+      background-color: var(--bg-color);
+      width: 100vw;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column; /* Mobile: empilhado */
+      overflow: hidden;
+    }
+
+    .main-layout-wrapper {
+      display: flex;
+      flex-direction: column; /* Mobile: sidebar e vídeo empilhados */
+      flex-grow: 1;
+    }
+
+    /* BARRA LATERAL ESQUERDA (SIDEBAR) */
+    .sidebar-left {
+      background-color: var(--sidebar-bg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 2px 0 10px var(--shadow-color);
+      min-width: 280px;
+      max-width: 100%;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .app-logo-section {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .app-logo {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 10px;
+    }
+    .app-title-sidebar {
+      color: var(--highlight-color);
+      font-size: 2.2em;
+      margin: 0;
+      font-weight: bold;
+      text-shadow: 0 0 5px rgba(75, 192, 200, 0.7);
+    }
+    .users-online {
+      color: #28a745;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+
+    .download-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .download-btn {
+      background-color: var(--button-secondary);
+      color: var(--button-text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      white-space: nowrap;
+    }
+    .download-btn:hover {
+      background-color: var(--button-secondary-hover);
+    }
+
+    .local-volume-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-color-muted);
+      font-size: 0.9em;
+      margin-bottom: 20px;
+    }
+    .local-volume-control input[type="range"] {
+      flex-grow: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      background: var(--border-color);
+      border-radius: 3px;
+      outline: none;
+      opacity: 0.8;
+      transition: opacity .2s;
+    }
+    .local-volume-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--highlight-color);
+      cursor: pointer;
+    }
+
+    .main-action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    #startButton, #stopButton {
+      border: none;
+      border-radius: 8px;
+      padding: 15px;
+      font-size: 1.2em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+      color: var(--button-text-color);
+    }
+    #startButton {
+      background-color: var(--button-primary);
+    }
+    #startButton:hover {
+      background-color: var(--button-primary-hover);
+      transform: translateY(-2px);
+    }
+    #stopButton {
+      background-color: var(--button-danger);
+    }
+    #stopButton:hover {
+      background-color: var(--button-danger-hover);
+      transform: translateY(-2px);
+    }
+
+    .filter-sections {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .filter-button {
+      background-color: var(--button-secondary);
+      color: var(--text-color-light);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .filter-button:hover {
+      background-color: var(--button-secondary-hover);
+    }
+
+    .rules-section {
+      background-color: var(--input-bg);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .rules-text {
+      font-size: 0.85em;
+      color: var(--text-color-muted);
+      line-height: 1.4;
+      margin: 0;
+    }
+    .rules-text a {
+      color: var(--highlight-color);
+      text-decoration: none;
+    }
+    .rules-text a:hover {
+      text-decoration: underline;
+    }
+
+    /* CHAT SECTION */
+    .chat-section {
+      background-color: var(--chat-bg);
+      border-radius: 8px;
+      padding: 15px;
+      flex-grow: 1; /* Ocupa o espaço restante na sidebar */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.3);
+    }
+    .chat-section h3 {
+      color: var(--text-color-muted);
+      font-size: 0.9em;
+      font-weight: normal;
+      margin-top: 0;
+      margin-bottom: 10px;
+      text-align: left;
+    }
+    .chat-messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+      margin-bottom: 10px;
+      font-size: 0.95em;
+      color: var(--text-color-light);
+      line-height: 1.4;
+    }
+    /* Estilos para mensagens de chat específicas */
+    .chat-messages .chat-message.me {
+        text-align: right;
+        color: var(--highlight-color); /* Suas mensagens em ciano */
+    }
+    .chat-messages .chat-message.remote {
+        text-align: left;
+        color: var(--text-color-light); /* Mensagens do parceiro claras */
+    }
+    .chat-messages .chat-message.system {
+        text-align: center;
+        font-style: italic;
+        font-size: 0.85em;
+        color: var(--text-color-muted);
+    }
+
+
+    .chat-input {
+      width: calc(100% - 22px); /* Ajusta largura */
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      background-color: var(--input-bg);
+      color: var(--input-text);
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    .send-button {
+      background-color: var(--highlight-color);
+      color: var(--button-text-color);
+      border: none;
+      border-radius: 5px;
+      padding: 10px 15px;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      width: 100%;
+    }
+    .send-button:hover {
+      background-color: var(--primary-hover);
+    }
+
+
+    /* ÁREA PRINCIPAL DO VÍDEO (DIREITA) */
+    .video-main-area {
+      flex-grow: 1; /* Ocupa o restante do espaço horizontal */
+      position: relative;
+      background-color: var(--video-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px; /* Padding para o vídeo em mobile */
+    }
+
+    .connection-status {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 0.85em;
+      color: var(--text-color-light);
+      white-space: nowrap;
+    }
+
+    .remote-video-display-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background-color: var(--video-bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px; /* Bordas arredondadas para o container do vídeo */
+      overflow: hidden;
+    }
+
+    #remoteVideo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain; /* Ajusta o vídeo para caber, mostrando barras pretas se necessário */
+      border-radius: 8px; /* Bordas arredondadas para o vídeo em si */
+      background-color: var(--video-bg);
+    }
+
+    /* Seu vídeo menor no canto inferior direito do vídeo principal */
+    #localVideo {
+      position: absolute;
+      bottom: 15px;
+      right: 15px;
+      width: 200px; /* Largura fixa */
+      height: 112.5px; /* Proporção 16:9 */
+      z-index: 10;
+      border: 2px solid var(--highlight-color); /* Borda ciano */
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(75, 192, 200, 0.7);
+      background-color: var(--video-bg);
+      object-fit: cover;
+    }
+
+    /* Controles de Mídia Flutuantes sobre o vídeo principal */
+    .media-controls-overlay {
+      position: absolute;
+      top: 15px; /* Posição no topo do vídeo principal */
+      right: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 15px;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 8px;
+      z-index: 15;
+    }
+
+    .media-control-button {
+        background-color: var(--button-secondary);
+        color: var(--button-text-color);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 1.2em;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+    .media-control-button:hover {
+        background-color: var(--button-secondary-hover);
+        transform: scale(1.1);
+    }
+    .media-control-button.report-button {
+        background-color: var(--button-danger);
+    }
+    .media-control-button.report-button:hover {
+        background-color: var(--button-danger-hover);
+    }
+
+
+    /* RESPONSIVIDADE PARA DESKTOP */
+    @media (min-width: 768px) {
+      .app-container {
+        border-radius: 12px;
+        width: 95vw;
+        max-width: 1300px;
+        height: 90vh;
+        min-height: 600px;
+        flex-direction: row; /* Desktop: sidebar e vídeo lado a lado */
+      }
+
+      .main-layout-wrapper {
+        flex-direction: row;
+      }
+
+      .sidebar-left {
+        min-width: 280px;
+        max-width: 320px;
+        height: 100%;
+        border-radius: 12px 0 0 12px;
+        border-right: 1px solid var(--border-color);
+        box-shadow: none;
+      }
+
+      .app-logo-section {
+        margin-top: 10px;
+        margin-bottom: 30px;
+      }
+      .app-title-sidebar {
+        font-size: 2.5em;
+      }
+
+      .video-main-area {
+        flex-grow: 1;
+        border-radius: 0 12px 12px 0;
+        padding: 20px;
+      }
+
+      .remote-video-display-container {
+        height: 100%;
+        width: 100%;
+        border-radius: 1rem;
+      }
+
+      #remoteVideo {
+        object-fit: contain; /* Mantém o aspect ratio original do vídeo */
+        border-radius: 1rem;
+      }
+
+      /* Seu vídeo pequeno no canto */
+      #localVideo {
+        bottom: 20px;
+        right: 20px;
+        width: 200px;
+        height: 112.5px;
+      }
+
+      /* Controles de mídia sobre o vídeo principal */
+      .media-controls-overlay {
+        top: 20px;
+        right: 20px;
+        transform: none;
+        left: auto;
+      }
+    }
+
+    /* Ajustes para mobile (para garantir que o layout fique bom, já que o foco é desktop agora) */
+    @media (max-width: 767px) {
+        .sidebar-left {
+            padding-bottom: 20px; /* Adiciona padding inferior para espaço */
+            gap: 15px; /* Menos espaço entre seções */
+            border-bottom: 1px solid var(--border-color); /* Borda para separar do vídeo */
+        }
+        .rules-section, .filter-sections, .download-buttons, .main-action-buttons, .local-volume-control {
+            margin-bottom: 15px; /* Reduz margens inferiores para economizar espaço */
+        }
+        .chat-section {
+            margin-top: 15px;
+            min-height: 200px;
+            height: auto;
+        }
+        .video-main-area {
+            padding: 10px;
+        }
+        .remote-video-display-container {
+            border-radius: 8px;
+        }
+        #remoteVideo, #localVideo {
+            border-radius: 8px;
+        }
+        .media-controls-overlay {
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            gap: 5px;
+        }
+        .media-control-button {
+            width: 35px;
+            height: 35px;
+            font-size: 1em;
+        }
+        .volume-slider {
+            width: 60px;
+        }
+        /* NOVO: Ajuste para o app-title e connection-status em mobile */
+        .app-title {
+            position: static;
+            margin: 15px 0 5px; /* Margem para separar de outros elementos */
+            font-size: 2em;
+        }
+        .connection-status {
+            position: static;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        /* Em mobile, o vídeo remoto pode ocupar a largura total e o local ficará dentro dele com object-fit: cover */
+        .remote-video-display-container {
+            width: 100%;
+            padding-top: 56.25%; /* Mantém proporção 16:9 */
+            margin-top: 15px; /* Espaço após status */
+        }
+        #remoteVideo {
+            object-fit: cover; /* Preenche o espaço disponível, cortando se necessário */
+        }
+        #localVideo {
+            width: 120px; /* Mini-vídeo menor em mobile */
+            height: 67.5px; /* Proporção 16:9 */
+            bottom: 10px;
+            right: 10px;
+            border-width: 1px;
+            box-shadow: 0 0 5px rgba(75, 192, 200, 0.5);
+        }
+    }
+  `}</style>
+);
+
 
 function App() {
+  // Constantes movidas para dentro do componente para garantir o escopo correto.
+  const STUN_SERVER = {
+    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+  };
+  const WEBSOCKET_URL = 'wss://linkyou-server.onrender.com';
+
+  // Refs para elementos e objetos que não devem causar re-renderizações
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const peerConnection = useRef(null);
   const ws = useRef(null);
-
-  const [connectionStatus, setConnectionStatus] = useState('Iniciando...');
-  const [localStream, setLocalStream] = useState(null);
-  const [isWaitingForCall, setIsWaitingForCall] = useState(false);
-  const isNegotiating = useRef(false);
+  const dataChannel = useRef(null);
+  const iceCandidateQueue = useRef([]);
+  const isNegotiating = useRef(false); // Previne "glare" e múltiplas negociações
+  const chatMessagesRef = useRef(null);
   const isInitiator = useRef(false);
 
-  const iceCandidateQueue = useRef([]);
-
+  // Estados que controlam a UI
+  const [connectionStatus, setConnectionStatus] = useState('Iniciando...');
+  const [localStream, setLocalStream] = useState(null);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isCamOff, setIsCamOff] = useState(false);
-  const [localVolume, setLocalVolume] = useState(1);
-
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');
-  const chatMessagesRef = useRef(null);
-  const dataChannel = useRef(null);
+  const [localVolume, setLocalVolume] = useState(1);
 
+  // Efeito para rolar o chat para o fundo
   useEffect(() => {
     if (chatMessagesRef.current) {
       chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
     }
   }, [messages]);
 
-
+  // Efeito para obter a mídia local (câmera/microfone) - corre uma vez
   useEffect(() => {
     async function startLocalStream() {
       try {
@@ -43,12 +570,11 @@ function App() {
         setLocalStream(stream);
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
-          localVideoRef.current.volume = localVolume;
         }
-        setConnectionStatus('Câmera e microfone prontos. Conectando ao servidor...');
+        setConnectionStatus('Câmera pronta. Conectando ao servidor...');
       } catch (error) {
-        console.error("Erro ao acessar a mídia local: ", error);
-        alert("Não foi possível acessar sua câmera e microfone. Verifique as permissões do navegador.");
+        console.error("[ERRO] Não foi possível acessar a mídia local: ", error);
+        alert("Não foi possível acessar sua câmera e microfone. Verifique as permissões do navegador e recarregue a página.");
         setConnectionStatus('Erro ao acessar mídia.');
       }
     }
@@ -59,334 +585,216 @@ function App() {
         localStream.getTracks().forEach(track => track.stop());
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Efeito principal para gerir WebSocket e sinalização - corre quando localStream está pronto
   useEffect(() => {
     if (!localStream) return;
 
-    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        console.log('WebSocket já aberto, reusando.');
-        return;
-    }
-    if (ws.current && ws.current.readyState === WebSocket.CONNECTING) {
-        console.log('WebSocket já conectando.');
-        return;
-    }
-
-    ws.current = new WebSocket('wss://linkyou-server.onrender.com');
+    ws.current = new WebSocket(WEBSOCKET_URL);
+    console.log('[SINALIZAÇÃO] Conectando ao servidor...');
 
     ws.current.onopen = () => {
-      console.log('Conectado ao servidor de sinalização.');
-      setConnectionStatus('Conectado ao servidor, aguardando outro usuário...');
+      console.log('[SINALIZAÇÃO] Conectado ao servidor.');
+      setConnectionStatus('Conectado. Clique em "Iniciar" para encontrar um parceiro.');
     };
 
     ws.current.onmessage = async (event) => {
       const message = JSON.parse(event.data);
-      console.log('Mensagem do servidor:', message.type);
+      console.log(`[SINALIZAÇÃO] Mensagem recebida: ${message.type}`, message);
 
       switch (message.type) {
-        case 'waiting':
-          setConnectionStatus('Aguardando por outro usuário...');
-          setIsWaitingForCall(true);
-          isInitiator.current = false;
-          break;
         case 'start_call':
-          // Lógica de iniciar chamada movida para uma função separada para clareza
-          console.log(`Recebido start_call. Own ID: ${message.ownId}, Peer ID: ${message.peerId}.`);
-          handleStartCall(message.ownId, message.peerId);
+          setConnectionStatus(`Pareando com o usuário ${message.peerId}...`);
+          // A lógica do iniciador é crucial aqui.
+          isInitiator.current = message.ownId < message.peerId;
+          console.log(`Sou o iniciador? ${isInitiator.current} (Meu ID: ${message.ownId}, Peer ID: ${message.peerId})`);
+          createPeerConnection(isInitiator.current);
           break;
         case 'offer':
-          if (peerConnection.current && peerConnection.current.signalingState === 'stable' && !isNegotiating.current) {
-            isNegotiating.current = true;
-            try {
-                await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.offer));
-                while (iceCandidateQueue.current.length > 0) {
-                    const candidate = iceCandidateQueue.current.shift();
-                    try {
-                        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
-                        console.log('Candidato ICE em fila adicionado.');
-                    } catch (e) {
-                        console.error('Erro ao adicionar candidato ICE da fila:', e);
-                    }
-                }
-
-                const answer = await peerConnection.current.createAnswer();
-                await peerConnection.current.setLocalDescription(answer);
-                ws.current.send(JSON.stringify({ type: 'answer', answer: answer }));
-                console.log('Oferta recebida e resposta enviada.');
-            } catch (e) {
-                console.error('Erro ao processar oferta:', e);
-            } finally {
-                isNegotiating.current = false;
-            }
-          } else {
-              console.warn('Recebida oferta em estado inválido ou durante negociação.', peerConnection.current?.signalingState, 'isNegotiating:', isNegotiating.current);
-          }
+          handleOffer(message.offer);
           break;
         case 'answer':
-          if (peerConnection.current && peerConnection.current.signalingState === 'have-local-offer' && !isNegotiating.current) {
-             isNegotiating.current = true;
-             try {
-                await peerConnection.current.setRemoteDescription(new RTCSessionDescription(message.answer));
-                while (iceCandidateQueue.current.length > 0) {
-                    const candidate = iceCandidateQueue.current.shift();
-                    try {
-                        await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
-                        console.log('Candidato ICE em fila adicionado.');
-                    } catch (e) {
-                        console.error('Erro ao adicionar candidato ICE da fila:', e);
-                    }
-                }
-                console.log('Resposta recebida.');
-            } catch (e) {
-                console.error('Erro ao processar resposta:', e);
-            } finally {
-                isNegotiating.current = false;
-            }
-          } else {
-              console.warn('Recebida resposta em estado inválido ou durante negociação.', peerConnection.current?.signalingState, 'isNegotiating:', isNegotiating.current);
-          }
+          handleAnswer(message.answer);
           break;
         case 'candidate':
-          if (peerConnection.current) {
-            if (peerConnection.current.remoteDescription) {
-                try {
-                    await peerConnection.current.addIceCandidate(new RTCIceCandidate(message.candidate));
-                    console.log('Candidato ICE adicionado.');
-                } catch (e) {
-                    console.error('Erro ao adicionar candidato ICE:', e);
-                }
-            } else {
-                console.warn('Candidato ICE recebido antes da descrição remota. Armazenando na fila...');
-                iceCandidateQueue.current.push(message.candidate);
-            }
-          }
+          handleCandidate(message.candidate);
           break;
         case 'call_ended':
-          setConnectionStatus('A chamada foi encerrada pelo outro usuário. Clique em "Iniciar" para encontrar um novo.');
-          if (peerConnection.current) {
-            peerConnection.current.close();
-            peerConnection.current = null;
-          }
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = null;
-          }
-          isInitiator.current = false;
-          iceCandidateQueue.current = [];
-          setMessages([]);
-          if (dataChannel.current) {
-              dataChannel.current.close();
-              dataChannel.current = null;
-          }
+          setConnectionStatus('O outro usuário encerrou a chamada.');
+          cleanupConnection();
           break;
         default:
-          console.warn('Tipo de mensagem desconhecido:', message.type);
+          console.warn('[SINALIZAÇÃO] Tipo de mensagem desconhecido:', message.type);
       }
     };
 
     ws.current.onclose = () => {
-      console.log('Desconectado do servidor de sinalização.');
-      setConnectionStatus('Desconectado do servidor.');
+      console.log('[SINALIZAÇÃO] Desconectado do servidor.');
+      setConnectionStatus('Desconectado. Recarregue a página para reconectar.');
+      cleanupConnection();
     };
 
     ws.current.onerror = (error) => {
-      console.error('Erro no WebSocket:', error);
-      setConnectionStatus('Erro na conexão com o servidor. Verifique o console.');
+      console.error('[SINALIZAÇÃO] Erro no WebSocket:', error);
+      setConnectionStatus('Erro de conexão com o servidor.');
     };
+
+    const createPeerConnection = async (shouldCreateOffer) => {
+        cleanupConnection();
+        
+        console.log('[WebRTC] Criando nova RTCPeerConnection...');
+        peerConnection.current = new RTCPeerConnection(STUN_SERVER);
+    
+        localStream.getTracks().forEach(track => {
+          peerConnection.current.addTrack(track, localStream);
+        });
+        
+        if (shouldCreateOffer) {
+          console.log('[WebRTC] Sou o iniciador. Criando Data Channel...');
+          dataChannel.current = peerConnection.current.createDataChannel("chat");
+          setupDataChannelEvents();
+          
+          console.log('[WebRTC] Criando oferta (offer)...');
+          const offer = await peerConnection.current.createOffer();
+          await peerConnection.current.setLocalDescription(offer);
+          console.log('[SINALIZAÇÃO] Enviando oferta...');
+          ws.current.send(JSON.stringify({ type: 'offer', offer: peerConnection.current.localDescription }));
+        } else {
+          console.log('[WebRTC] Não sou o iniciador. Aguardando oferta e Data Channel...');
+          peerConnection.current.ondatachannel = (event) => {
+            dataChannel.current = event.channel;
+            setupDataChannelEvents();
+          };
+        }
+
+        peerConnection.current.ontrack = (event) => {
+          console.log('[WebRTC] Faixa remota recebida!');
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = event.streams[0];
+            setConnectionStatus('Conectado! Chamada ativa.');
+          }
+        };
+    
+        peerConnection.current.onicecandidate = (event) => {
+          if (event.candidate) {
+            console.log('[SINALIZAÇÃO] Enviando ICE candidate...');
+            ws.current.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
+          }
+        };
+    
+        peerConnection.current.oniceconnectionstatechange = () => {
+          if (peerConnection.current) {
+            console.log('[ESTADO] Estado da conexão ICE:', peerConnection.current.iceConnectionState);
+            if (['disconnected', 'failed', 'closed'].includes(peerConnection.current.iceConnectionState)) {
+              setConnectionStatus('Conexão perdida.');
+              cleanupConnection();
+            }
+          }
+        };
+      };
+    
+      const handleOffer = async (offer) => {
+        if (!peerConnection.current) {
+            console.log('[WebRTC] Recebi oferta, mas não tenho PeerConnection. Criando um como não-iniciador.');
+            await createPeerConnection(false);
+        }
+    
+        console.log('[WebRTC] Processando oferta recebida...');
+        await peerConnection.current.setRemoteDescription(new RTCSessionDescription(offer));
+        
+        console.log('[WebRTC] Criando resposta (answer)...');
+        const answer = await peerConnection.current.createAnswer();
+        await peerConnection.current.setLocalDescription(answer);
+        
+        console.log('[SINALIZAÇÃO] Enviando resposta...');
+        ws.current.send(JSON.stringify({ type: 'answer', answer: peerConnection.current.localDescription }));
+    
+        processIceCandidateQueue();
+      };
+    
+      const handleAnswer = async (answer) => {
+        if (!peerConnection.current) return console.error('[ERRO] Resposta recebida mas não há PeerConnection.');
+        
+        console.log('[WebRTC] Processando resposta recebida...');
+        await peerConnection.current.setRemoteDescription(new RTCSessionDescription(answer));
+        processIceCandidateQueue();
+      };
+    
+      const handleCandidate = async (candidate) => {
+        if (peerConnection.current && peerConnection.current.remoteDescription) {
+            await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+        } else {
+            console.log('[WebRTC] Candidato recebido cedo, guardando na fila...');
+            iceCandidateQueue.current.push(candidate);
+        }
+      };
+    
+      const processIceCandidateQueue = async () => {
+        while (iceCandidateQueue.current.length > 0) {
+          const candidate = iceCandidateQueue.current.shift();
+          console.log('[WebRTC] Processando candidato da fila...');
+          await peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+      };
 
     return () => {
-      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.close();
-      }
-      if (peerConnection.current) {
-        peerConnection.current.close();
-      }
-      if (dataChannel.current) {
-          dataChannel.current.close();
-      }
-      iceCandidateQueue.current = [];
+      if (ws.current) ws.current.close();
+      cleanupConnection();
     };
-  }, [localStream]);
+  }, [localStream, WEBSOCKET_URL, STUN_SERVER]);
 
-  // Função separada para lidar com start_call, garantindo a inicialização
-  const handleStartCall = async (ownId, peerId) => {
-    setConnectionStatus(`Pareando com o usuário ${peerId}...`);
-    setIsWaitingForCall(false);
-
-    isInitiator.current = ownId < peerId;
-    console.log(`Sou o iniciador? ${isInitiator.current} (Meu ID: ${ownId}, Peer ID: ${peerId})`);
-
-    // Sempre crie um novo PeerConnection ao receber start_call,
-    // e passe a flag isInitiator para que ele crie a oferta ou espere.
-    await createPeerConnection(localStream, isInitiator.current);
-    console.log("createPeerConnection chamado com isInitiator:", isInitiator.current);
-  };
-
-
-  const createPeerConnection = async (stream, shouldCreateOffer) => {
-    if (peerConnection.current) {
-        peerConnection.current.close();
-    }
-    peerConnection.current = null;
-
-    if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null;
-    }
-    setMessages([]);
-    if (dataChannel.current) {
-        dataChannel.current.close();
-        dataChannel.current = null;
-    }
-
-
-    peerConnection.current = new RTCPeerConnection(STUN_SERVER);
-    console.log("RTCPeerConnection criado.");
-
-    stream.getTracks().forEach(track => {
-      peerConnection.current.addTrack(track, stream);
-    });
-
-    if (shouldCreateOffer) {
-        dataChannel.current = peerConnection.current.createDataChannel("chat");
-        console.log("DataChannel criado como iniciador.");
-        setupDataChannelEvents(dataChannel.current);
-    } else {
-        peerConnection.current.ondatachannel = (event) => {
-            dataChannel.current = event.channel;
-            console.log("DataChannel recebido.");
-            setupDataChannelEvents(dataChannel.current);
-        };
-    }
-
-    const setupDataChannelEvents = (dc) => {
-        dc.onopen = () => {
-            console.log("DataChannel aberto!");
-            setMessages(prev => [...prev, { from: 'system', text: 'Chat conectado!' }]);
-        };
-        dc.onmessage = (event) => {
-            console.log("Mensagem DataChannel recebida:", event.data);
-            setMessages(prev => [...prev, { from: 'remote', text: event.data }]);
-        };
-        dc.onclose = () => {
-            console.log("DataChannel fechado.");
-            setMessages(prev => [...prev, { from: 'system', text: 'Chat desconectado.' }]);
-        };
-        dc.onerror = (err) => {
-            console.error("Erro no DataChannel:", err);
-            setMessages(prev => [...prev, { from: 'system', text: 'Erro no chat.' }]);
-        };
-    };
-
-
-    peerConnection.current.ontrack = (event) => {
-      if (remoteVideoRef.current && event.streams[0]) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-        setConnectionStatus('Conectado! Chamada ativa.');
-        console.log('Stream remoto adicionado com sucesso!');
-      }
-    };
-
-    peerConnection.current.onicecandidate = (event) => {
-      if (event.candidate && ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
-        console.log('Candidato ICE enviado.');
-      }
-    };
-
-    peerConnection.current.oniceconnectionstatechange = () => {
-        console.log('Estado da conexão ICE:', peerConnection.current.iceConnectionState);
-        if (peerConnection.current.iceConnectionState === 'disconnected' || peerConnection.current.iceConnectionState === 'failed') {
-            setConnectionStatus('Conexão WebRTC perdida. Clique em "Iniciar" para tentar novamente.');
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-            isInitiator.current = false;
-            if (peerConnection.current) {
-                peerConnection.current.close();
-                peerConnection.current = null;
-            }
-            if (dataChannel.current) {
-                dataChannel.current.close();
-                dataChannel.current = null;
-            }
-            iceCandidateQueue.current = [];
-            setMessages([]);
-        } else if (peerConnection.current.iceConnectionState === 'connected') {
-            setConnectionStatus('Conectado! Chamada ativa.');
-        }
-    };
-
-    peerConnection.current.onnegotiationneeded = async () => {
-        // Esta função agora é mais um fallback e para renegociações
-        // A oferta inicial é criada explicitamente na createPeerConnection se shouldCreateOffer é true
-        if (shouldCreateOffer && peerConnection.current.signalingState === 'stable' && !isNegotiating.current) {
-             console.log('onnegotiationneeded disparado e sou iniciador, mas já deveria ter criado oferta. Recriando/enviando (fallback)...');
-             isNegotiating.current = true;
-             try {
-                const offer = await peerConnection.current.createOffer();
-                if (peerConnection.current.signalingState !== 'stable') {
-                    console.warn('Estado mudou antes de setar a oferta local. Abortando negociação.');
-                    return;
-                }
-                await peerConnection.current.setLocalDescription(offer);
-                if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                    ws.current.send(JSON.stringify({ type: 'offer', offer: offer }));
-                    console.log('Oferta WebRTC enviada via WS (onnegotiationneeded fallback).');
-                }
-            } catch (err) {
-                console.error('Erro ao criar ou enviar oferta (onnegotiationneeded fallback):', err);
-            } finally {
-                isNegotiating.current = false;
-            }
-         } else {
-             console.warn('onnegotiationneeded disparado mas não é o momento para criar oferta.', peerConnection.current.signalingState, 'isInitiator:', isInitiator.current, 'isNegotiating:', isNegotiating.current);
-         }
-    };
-
-    // NOVO: A oferta é criada aqui se shouldCreateOffer é true, logo após o setup do PeerConnection
-    if (shouldCreateOffer) {
-        console.log("Iniciador: Criando oferta explicitamente.");
-        try {
-            isNegotiating.current = true;
-            const offer = await peerConnection.current.createOffer();
-            await peerConnection.current.setLocalDescription(offer);
-            if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-                ws.current.send(JSON.stringify({ type: 'offer', offer: offer }));
-                console.log('Oferta WebRTC criada e enviada explicitamente como iniciador.');
-            }
-        } catch (err) {
-            console.error('Erro ao criar ou enviar oferta explicitamente:', err);
-        } finally {
-            isNegotiating.current = false;
-        }
-    }
-  };
-
-  const startNewCall = async () => {
-    setConnectionStatus('Buscando novo usuário...');
+  const cleanupConnection = () => {
+    console.log('[LIMPEZA] Limpando conexão anterior.');
     if (peerConnection.current) {
       peerConnection.current.close();
       peerConnection.current = null;
     }
-    if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = null;
-    }
-    setMessages([]);
     if (dataChannel.current) {
-        dataChannel.current.close();
-        dataChannel.current = null;
+      dataChannel.current.close();
+      dataChannel.current = null;
     }
-
-    isInitiator.current = false;
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = null;
+    }
     iceCandidateQueue.current = [];
+    setMessages([]);
+  };
 
+  const setupDataChannelEvents = () => {
+    if (!dataChannel.current) return;
+    dataChannel.current.onopen = () => {
+      console.log('[CHAT] Data Channel aberto!');
+      setMessages([{ from: 'system', text: 'Chat conectado!' }]);
+    };
+    dataChannel.current.onmessage = (event) => {
+      setMessages(prev => [...prev, { from: 'remote', text: event.data }]);
+    };
+    dataChannel.current.onclose = () => {
+      console.log('[CHAT] Data Channel fechado.');
+      setMessages(prev => [...prev, { from: 'system', text: 'Chat desconectado.' }]);
+    };
+  };
+  
+  const startNewCall = () => {
+    setConnectionStatus('Buscando novo usuário...');
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({ type: 'request_new_peer' }));
-        setIsWaitingForCall(true);
+      ws.current.send(JSON.stringify({ type: 'request_new_peer' }));
     } else {
-        console.error("WebSocket não está pronto para enviar 'request_new_peer'");
-        setConnectionStatus('Erro: WebSocket não conectado. Tente recarregar a página.');
+      setConnectionStatus('Erro: Não conectado ao servidor. Recarregue a página.');
     }
   };
 
+  const sendMessage = () => {
+    const messageText = currentMessage.trim();
+    if (dataChannel.current && dataChannel.current.readyState === 'open' && messageText) {
+      dataChannel.current.send(messageText);
+      setMessages(prev => [...prev, { from: 'me', text: messageText }]);
+      setCurrentMessage('');
+    }
+  };
+  
   const toggleMic = () => {
     if (localStream) {
       localStream.getAudioTracks().forEach(track => {
@@ -404,7 +812,7 @@ function App() {
       });
     }
   };
-
+  
   const handleLocalVolumeChange = (event) => {
     const newVolume = parseFloat(event.target.value);
     setLocalVolume(newVolume);
@@ -412,7 +820,7 @@ function App() {
       localVideoRef.current.volume = newVolume;
     }
   };
-
+  
   const handleRemoteVolumeChange = (event) => {
     if (remoteVideoRef.current) {
       remoteVideoRef.current.volume = event.target.value;
@@ -430,23 +838,9 @@ function App() {
       }
     }
   };
-
-  const handleMessageChange = (event) => {
-    setCurrentMessage(event.target.value);
-  };
-
-  const sendMessage = () => {
-    if (dataChannel.current && dataChannel.current.readyState === 'open' && currentMessage.trim() !== '') {
-      dataChannel.current.send(currentMessage.trim());
-      setMessages(prev => [...prev, { from: 'me', text: currentMessage.trim() }]);
-      setCurrentMessage('');
-    } else {
-        console.warn("DataChannel não está aberto para enviar mensagem ou mensagem vazia.");
-        if (currentMessage.trim() !== '') {
-            setMessages(prev => [...prev, { from: 'system', text: 'Chat não conectado. Tente iniciar uma chamada.' }]);
-            setCurrentMessage('');
-        }
-    }
+  
+  const handleReportUser = () => {
+      alert("Função de denúncia ainda não implementada.");
   };
 
   const handleKeyPress = (event) => {
@@ -455,135 +849,98 @@ function App() {
     }
   };
 
-  const handleReportUser = () => {
-    if (peerConnection.current && peerConnection.current.connectionState === 'connected') {
-        const reportedPeerId = "desconhecido";
-        const reason = prompt("Por favor, descreva o motivo da denúncia (opcional):");
-        
-        if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-            ws.current.send(JSON.stringify({ 
-                type: 'report_user', 
-                reportedPeerId: reportedPeerId, 
-                reason: reason 
-            }));
-            alert("Usuário denunciado! Agradecemos sua colaboração.");
-            console.log(`Denúncia enviada para o servidor. Motivo: ${reason}`);
-        } else {
-            alert("Não foi possível enviar a denúncia. Conexão com o servidor perdida.");
-        }
-    } else {
-        alert("Não há usuário conectado para denunciar.");
-        console.warn("Tentativa de denúncia sem conexão ativa.");
-    }
-    startNewCall();
-  };
-
   return (
-    <div className="app-container">
-      <div className="main-layout-wrapper">
-
-        {/* BARRA LATERAL ESQUERDA (SIDEBAR) */}
-        <div className="sidebar-left">
-          <div className="app-logo-section">
-            <img src="/linkyou_logo.png" alt="LinkYou Logo" className="app-logo" />
-            <h1 className="app-title-sidebar">LinkYou</h1>
-            <p className="users-online">427.816 usuários online</p>
-          </div>
-
-          <div className="download-buttons">
-            <button className="download-btn">DISPONÍVEL NO <br/> Google Play</button>
-            <button className="download-btn">Descarregar na <br/> App Store</button>
-          </div>
-
-          <div className="local-volume-control">
+    <>
+      <GlobalStyles />
+      <div className="app-container">
+        <div className="main-layout-wrapper">
+          <div className="sidebar-left">
+            <div className="app-logo-section">
+              <img src="https://placehold.co/80x80/1e1e1e/4bc0c8?text=L" alt="Logótipo da LinkYou" className="app-logo" />
+              <h1 className="app-title-sidebar">LinkYou</h1>
+              <p className="users-online">427.816 usuários online</p>
+            </div>
+            <div className="download-buttons">
+              <button className="download-btn">DISPONÍVEL NO <br/> Google Play</button>
+              <button className="download-btn">Descarregar na <br/> App Store</button>
+            </div>
+            <div className="local-volume-control">
               <span className="volume-icon">🔊</span> Volume Local:
               <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={localVolume}
-                  onChange={handleLocalVolumeChange}
-                  title="Volume Local"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={localVolume}
+                onChange={handleLocalVolumeChange}
+                title="Volume Local"
               />
-          </div>
-
-          <div className="main-action-buttons">
-            <button id="startButton" onClick={startNewCall}>Iniciar</button>
-            <button id="stopButton">Parar</button>
-          </div>
-
-          <div className="filter-sections">
-            <button className="filter-button">País 🌍</button>
-            <button className="filter-button">Eu sou 👤</button>
-          </div>
-
-          <div className="rules-section">
-            <p className="rules-text">Ao clicar em "Iniciar", você concorda em seguir nossas <a href="#" target="_blank">regras</a>. Qualquer violação resultará na suspensão da conta. Certifique-se de que seu rosto esteja claramente visível para o interlocutor.</p>
-          </div>
-
-          {/* Área de Chat */}
-          <div className="chat-section">
-            <h3>Escreva sua mensagem aqui e pressi...</h3>
-            <div className="chat-messages" ref={chatMessagesRef}>
-                {messages.map((msg, index) => (
-                    <p key={index} className={`chat-message ${msg.from}`}>
-                        {msg.from === 'me' ? 'Você: ' : msg.from === 'remote' ? 'Parceiro: ' : ''}
-                        {msg.text}
-                    </p>
-                ))}
             </div>
-            <input
+            <div className="main-action-buttons">
+              <button id="startButton" onClick={startNewCall}>Iniciar</button>
+              <button id="stopButton" onClick={cleanupConnection}>Parar</button>
+            </div>
+            <div className="filter-sections">
+              <button className="filter-button">País 🌍</button>
+              <button className="filter-button">Eu sou 👤</button>
+            </div>
+            <div className="rules-section">
+              <p className="rules-text">Ao clicar em "Iniciar", você concorda em seguir nossas <a href="/#" target="_blank">regras</a>.</p>
+            </div>
+            <div className="chat-section">
+              <h3>Escreva sua mensagem aqui...</h3>
+              <div className="chat-messages" ref={chatMessagesRef}>
+                {messages.map((msg, index) => (
+                  <p key={index} className={`chat-message ${msg.from}`}>
+                    <strong>{msg.from === 'me' ? 'Você' : msg.from === 'remote' ? 'Parceiro' : 'Sistema'}:</strong> {msg.text}
+                  </p>
+                ))}
+              </div>
+              <input
                 type="text"
                 placeholder="Digite sua mensagem..."
                 className="chat-input"
                 value={currentMessage}
-                onChange={handleMessageChange}
+                onChange={(e) => setCurrentMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-            />
-            <button className="send-button" onClick={sendMessage}>Enviar</button>
+              />
+              <button className="send-button" onClick={sendMessage}>Enviar</button>
+            </div>
           </div>
-        </div>
-
-        {/* ÁREA PRINCIPAL DO VÍDEO (DIREITA) */}
-        <div className="video-main-area">
-          <p className="connection-status">{connectionStatus}</p>
-
-          <div className="remote-video-display-container">
-            <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
-            <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video>
-          </div>
-
-          {/* Controles de Mídia Flutuantes sobre o vídeo principal */}
-          <div className="media-controls-overlay">
+          <div className="video-main-area">
+            <p className="connection-status">{connectionStatus}</p>
+            <div className="remote-video-display-container">
+              <video id="remoteVideo" ref={remoteVideoRef} autoPlay playsInline></video>
+              <video id="localVideo" ref={localVideoRef} autoPlay muted playsInline></video>
+            </div>
+            <div className="media-controls-overlay">
               <button onClick={toggleMic} className="media-control-button" title={isMicMuted ? 'Ligar Microfone' : 'Desligar Microfone'}>
-                  {isMicMuted ? '🔇' : '🎤'}
+                {isMicMuted ? '🔇' : '🎤'}
               </button>
               <button onClick={toggleCam} className="media-control-button" title={isCamOff ? 'Ligar Câmera' : 'Desligar Câmera'}>
-                  {isCamOff ? '🎥' : '📷'}
+                {isCamOff ? '🚫📷' : '📷'}
               </button>
               <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  defaultValue="1"
-                  onChange={handleRemoteVolumeChange}
-                  title="Volume do Outro"
-                  className="volume-slider"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                defaultValue="1"
+                onChange={handleRemoteVolumeChange}
+                title="Volume do Outro"
+                className="volume-slider"
               />
               <button onClick={toggleFullScreen} title="Tela Cheia" className="media-control-button">
-                  [ ]
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
               </button>
-              {/* Botão de Denúncia com onClick */}
               <button className="report-button media-control-button" title="Denunciar Usuário" onClick={handleReportUser}>
-                  🚩
+                🚩
               </button>
+            </div>
           </div>
         </div>
-
       </div>
-    </div>
+    </>
   );
 }
 
